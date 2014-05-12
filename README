@@ -100,8 +100,10 @@ The <keys> field is a series of numeric keycodes, separated by the `+'
 character. `actkbd -n -s' can be used to find out any keycodes you need, as it 
 will report all key presses without executing any commands.
 
-The <event type> string field is one of `key' (key press event), `rep' (key 
-repeat event) or `rel' (key release event). If empty, it defaults to `key'.
+The <event type> string field is a comma or whitespace separated list of the
+`key' (key press event), `rep' (key repeat event) and `rel' (key release event)
+strings. This field indicates which keyboard events this entry corresponds to.
+If left empty, it defaults to `key'.
 
 The <attributes> field contains an optional comma or whitespace separated list
 of attributes. The listed attributes can modify the execution of the supplied

@@ -31,8 +31,9 @@ static int strtolower(char *str) {
 
 
 static int proc_config(int lineno, char *line, key_cmd **cmd) {
-    int i, l, f = 1, eventno = INVALID, ret = CONFERR;
-    char *dup = NULL, *event = NULL, *attrs = NULL, *command = NULL, *err = NULL;
+    int i, l, f = 1, etype = INVALID, ret = CONFERR;
+    char *event = NULL, *attrs = NULL, *command = NULL;
+    char *dup = NULL, *err = NULL, *tmp = NULL;
     unsigned char *keys;
     unsigned int attr_bits = 0;
     attr_t *attrlst = NULL, *attr = NULL, *attr_last = NULL;
@@ -68,90 +69,96 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
     }
 
     /* Set the field boundaries */
-    line[event - line - 1] = '\0';
-    line[attrs - line - 1] = '\0';
-    line[command - line - 1] = '\0';
+    *(event - 1) = '\0';
+    *(attrs - 1) = '\0';
+    *(command - 1) = '\0';
     if (line[l - 1] == '\n')
 	line[l - 1] = '\0';
 
     /* Set the event type */
     strtolower(event);
-    if (strcmp(event, "") == 0)
-	eventno = KEY;
-    else if (strcmp(event, "key") == 0)
-	eventno = KEY;
-    else if (strcmp(event, "rep") == 0)
-	eventno = REP;
-    else if (strcmp(event, "rel") == 0)
-	eventno = REL;
+    while ((tmp = strsep(&event, ", \t")) != NULL) {
+	if (strlen(tmp) == 0)
+	    continue;
 
-    if (eventno == INVALID) {
-	err = "invalid event type";
-	goto ERROR;
+	if (strcmp(tmp, "key") == 0) {
+	     etype |= KEY;
+	} else if (strcmp(tmp, "rep") == 0) {
+	     etype |= REP;
+	} else if (strcmp(tmp, "rel") == 0) {
+	     etype |= REL;
+	} else {
+	    err = "invalid event type";
+	    goto ERROR;
+	}
     }
+
+    /* If no event type was specified, fall back to `key' */
+    if (etype == INVALID)
+	etype = KEY;
 
     /* The keys are always at the beginning of the line */
     if (strmask(&keys, line) != OK) {
-	err = "invalid key field";
+	err = "invalid <keys> field";
 	goto ERROR;
     }
 
-    /* Set the module list */
+    /* Set the attribute list */
     strtolower(attrs);
-    while ((event = strsep(&attrs, ", \t")) != NULL) {
+    while ((tmp = strsep(&attrs, ", \t")) != NULL) {
 	int type = -1;
 	void *opt = NULL;
 	char *num = NULL;
 
-	if (strlen(event) == 0)
+	if (strlen(tmp) == 0)
 	    continue;
 
-	if (strcmp(event, "noexec") == 0) {
+	if (strcmp(tmp, "noexec") == 0) {
 	    attr_bits |= BIT_ATTR_NOEXEC;
-	} else if (strcmp(event, "grabbed") == 0) {
+	} else if (strcmp(tmp, "grabbed") == 0) {
 	    attr_bits |= BIT_ATTR_GRABBED;
-	} else if (strcmp(event, "ungrabbed") == 0) {
+	} else if (strcmp(tmp, "ungrabbed") == 0) {
 	    attr_bits |= BIT_ATTR_UNGRABBED;
-	} else if (strcmp(event, "not") == 0) {
+	} else if (strcmp(tmp, "not") == 0) {
 	    attr_bits |= BIT_ATTR_NOT;
-	} else if (strcmp(event, "all") == 0) {
+	} else if (strcmp(tmp, "all") == 0) {
 	    attr_bits |= BIT_ATTR_ALL;
-	} else if (strcmp(event, "any") == 0) {
+	} else if (strcmp(tmp, "any") == 0) {
 	    attr_bits |= BIT_ATTR_ANY;
-	} else if (strcmp(event, "exec") == 0) {
+	} else if (strcmp(tmp, "exec") == 0) {
 	    type = ATTR_EXEC;
-	} else if (strcmp(event, "grab") == 0) {
+	} else if (strcmp(tmp, "grab") == 0) {
 	    type = ATTR_GRAB;
-	} else if (strcmp(event, "ungrab") == 0) {
+	} else if (strcmp(tmp, "ungrab") == 0) {
 	    type = ATTR_UNGRAB;
-	} else if (strcmp(event, "ignrel") == 0) {
+	} else if (strcmp(tmp, "ignrel") == 0) {
 	    type = ATTR_IGNREL;
-	} else if (strcmp(event, "rcvrel") == 0) {
+	} else if (strcmp(tmp, "rcvrel") == 0) {
 	    type = ATTR_RCVREL;
-	} else if (strcmp(event, "allrel") == 0) {
+	} else if (strcmp(tmp, "allrel") == 0) {
 	    type = ATTR_ALLREL;
-	} else if (strncmp(event, "key(", 4) == 0) {
+	} else if (strncmp(tmp, "key(", 4) == 0) {
 	    type = ATTR_KEY;
-	    event += 4;
-	    num = strsep(&event, "()");
-	} else if (strncmp(event, "rel(", 4) == 0) {
+	    tmp += 4;
+	    num = strsep(&tmp, "()");
+	} else if (strncmp(tmp, "rel(", 4) == 0) {
 	    type = ATTR_REL;
-	    event += 4;
-	    num = strsep(&event, "()");
-	} else if (strncmp(event, "rep(", 4) == 0) {
+	    tmp += 4;
+	    num = strsep(&tmp, "()");
+	} else if (strncmp(tmp, "rep(", 4) == 0) {
 	    type = ATTR_REP;
-	    event += 4;
-	    num = strsep(&event, "()");
-	} else if (strncmp(event, "ledon(", 6) == 0) {
+	    tmp += 4;
+	    num = strsep(&tmp, "()");
+	} else if (strncmp(tmp, "ledon(", 6) == 0) {
 	    type = ATTR_LEDON;
-	    event += 6;
-	    num = strsep(&event, "()");
-	} else if (strncmp(event, "ledoff(", 7) == 0) {
+	    tmp += 6;
+	    num = strsep(&tmp, "()");
+	} else if (strncmp(tmp, "ledoff(", 7) == 0) {
 	    type = ATTR_LEDOFF;
-	    event += 7;
-	    num = strsep(&event, "()");
+	    tmp += 7;
+	    num = strsep(&tmp, "()");
 	} else {
-	    lprintf("Warning: unknown attribute %s\n", event);
+	    lprintf("Warning: unknown attribute %s\n", tmp);
 	}
 
 	if (num != NULL) {
@@ -201,7 +208,7 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	goto ERROR;
     } else {
 	(*cmd)->keys = keys;
-	(*cmd)->type = eventno;
+	(*cmd)->type = etype;
 	(*cmd)->command = strdup(command);
 	(*cmd)->attr_bits = attr_bits;
 	(*cmd)->attrs = attrlst;
@@ -244,6 +251,24 @@ typedef struct _confentry {
 
 
 static confentry *list = NULL;
+
+
+static void print_etype(int type) {
+    char *sep = "";
+
+    if ((type & KEY) > 0) {
+	lprintf("%skey", sep);
+	sep = ",";
+    }
+    if ((type & REP) > 0) {
+	lprintf("%srep", sep);
+	sep = ",";
+    }
+    if ((type & REL) > 0) {
+	lprintf("%srel", sep);
+	sep = ",";
+    }
+}
 
 
 static void print_attrs(key_cmd *cmd) {
@@ -371,7 +396,9 @@ int open_config() {
 	    if (verbose > 1) {
 		lprintf("Config: ");
 		lprint_mask(cmd->keys);
-		lprintf(" -:- %s -:- ", (cmd->type == KEY)?"key":((cmd->type == REP)?"rep":"rel"));
+		lprintf(" -:- ");
+		print_etype(cmd->type);
+		lprintf(" -:- ");
 		print_attrs(cmd);
 		lprintf(" -:- %s\n", cmd->command);
 	    }
@@ -420,7 +447,7 @@ int match_key(int type, key_cmd **command) {
     *command = NULL;
 
     while (node != NULL) {
-	if ((node->cmd->type != type) ||
+	if (((node->cmd->type & type) == 0) ||
 		(((node->cmd->attr_bits & BIT_ATTR_GRABBED) > 0) && (!grabbed)) ||
 		(((node->cmd->attr_bits & BIT_ATTR_UNGRABBED) > 0) && (grabbed))) {
 	    node = node->next;

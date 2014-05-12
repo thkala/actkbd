@@ -32,7 +32,11 @@
 
 
 /* Event types */
-enum { KEY, REP, REL, INVALID };
+#define INVALID		0
+#define KEY		(1<<0)
+#define REP		(1<<1)
+#define REL		(1<<2)
+
 
 /* Return values */
 enum { OK, USAGE, MEMERR, HOSTFAIL, DEVFAIL, READERR, WRITEERR, EVERR, CONFERR,

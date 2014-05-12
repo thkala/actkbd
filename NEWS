@@ -1,3 +1,4 @@
-0.2.3:
-	* Added the `not' attribute
-	* Minor documentation updates and clean-ups
+0.2.4:
+	* The event type field is now a bitmask, rather than a simple value,
+	  which allows multiple event types to be handled in a single entry.
+	* Minor code clean-ups.

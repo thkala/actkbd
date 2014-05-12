@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
     while (get_key(&key, &type) == OK) {
 	int exec_ok = 0;
 
-	if ((type == KEY) || (type == REP))
+	if ((type & (KEY | REP)) != 0)
 	    set_key_bit(key, 1);
 
 	if (verbose > 2) {

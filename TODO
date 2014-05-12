@@ -38,3 +38,5 @@
 * Create manual pages: actkbd.1, actkbd.conf.5
 
 * Autotools ?
+
+* A scripted (Python?) GUI configuration tool ?

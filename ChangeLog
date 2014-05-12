@@ -1,4 +1,11 @@
+Thu Mar  9 16:08:27 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.4
+	* The event type field is now a bitmask, rather than a simple value,
+	  which allows multiple event types to be handled in a single entry.
+	* Minor code clean-ups.
+
 Thu Mar  9 01:12:19 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.3
 	* Added the `not' attribute
 	* Minor documentation updates and clean-ups
 
