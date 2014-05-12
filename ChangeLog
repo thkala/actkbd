@@ -1,3 +1,7 @@
+Thu Mar  9 01:12:19 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Added the `not' attribute
+	* Minor documentation updates and clean-ups
+
 Tue Mar  7 19:48:04 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.2
 	* Added the `ledon()' and `ledoff()' attributes to control the

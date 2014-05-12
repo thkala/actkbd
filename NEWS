@@ -1,4 +1,3 @@
-0.2.2:
-	* Added the `ledon()' and `ledoff()' attributes to control the
-	  keyboard LEDs.
-	* Documentation updates
+0.2.3:
+	* Added the `not' attribute
+	* Minor documentation updates and clean-ups

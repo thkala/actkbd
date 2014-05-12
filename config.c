@@ -112,10 +112,12 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	    attr_bits |= BIT_ATTR_GRABBED;
 	} else if (strcmp(event, "ungrabbed") == 0) {
 	    attr_bits |= BIT_ATTR_UNGRABBED;
-	} else if (strcmp(event, "any") == 0) {
-	    attr_bits |= BIT_ATTR_ANY;
+	} else if (strcmp(event, "not") == 0) {
+	    attr_bits |= BIT_ATTR_NOT;
 	} else if (strcmp(event, "all") == 0) {
 	    attr_bits |= BIT_ATTR_ALL;
+	} else if (strcmp(event, "any") == 0) {
+	    attr_bits |= BIT_ATTR_ANY;
 	} else if (strcmp(event, "exec") == 0) {
 	    type = ATTR_EXEC;
 	} else if (strcmp(event, "grab") == 0) {
@@ -263,12 +265,16 @@ static void print_attrs(key_cmd *cmd) {
 	lprintf("%sungrabbed", sep);
 	sep = ",";
     }
-    if ((cmd->attr_bits & BIT_ATTR_ANY) > 0) {
-	lprintf("%sany", sep);
+    if ((cmd->attr_bits & BIT_ATTR_NOT) > 0) {
+	lprintf("%snot", sep);
 	sep = ",";
     }
     if ((cmd->attr_bits & BIT_ATTR_ALL) > 0) {
 	lprintf("%sall", sep);
+	sep = ",";
+    }
+    if ((cmd->attr_bits & BIT_ATTR_ANY) > 0) {
+	lprintf("%sany", sep);
 	sep = ",";
     }
 
@@ -420,9 +426,7 @@ int match_key(int type, key_cmd **command) {
 	    node = node->next;
 	    continue;
 	}
-	if (cmp_key_mask(node->cmd->keys,
-		(node->cmd->attr_bits & BIT_ATTR_ANY) > 0,
-		(node->cmd->attr_bits & BIT_ATTR_ALL) > 0)) {
+	if (cmp_key_mask(node->cmd->keys, node->cmd->attr_bits)) {
 	    *command = node->cmd;
 	    return OK;
 	}

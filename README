@@ -196,21 +196,36 @@ NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
 NOTE: An empty value for the `key()', `rel()' and `rep()' attributes instructs
 	actkbd to use the key value that triggered the current rule.
 
+WARNING: Note that the careless use of the key event injection commands can make
+	your life really adventurous - or just difficult. For example injecting
+	a `return' key press/release sequence after the `r' key is a way to make
+	logging on locally as "root" really, really difficult. Of course you may
+	still be able to login using a user without an "r" in their username and
+	password and issuing `su', but you'd still need a root password without
+	an "r" in it...
+
 WARNING: The `key()', `rel()' and `rep()' attributes, if used without caution,
-	may cause event loops that can bring the system to its knees. Also it
-	seems that continuous event loops can cause actkbd to miss some events
-	with various dire results. Use at your own risk.
+	may cause event loops that can bring the system to its knees. Also, it
+	seems that continuous event loops can cause actkbd to miss some events,
+	or even block the event interface, with various dire results. Use with
+	extreme caution.
+
+* `not': Indicates that the current entry will match when any key except for the
+	listed ones is received. This attribute can be used along with an empty
+	<keys> field to match all events, regardless of the keycode.
+
+* `all': Indicates that the current entry will match when all of the listed keys
+	are pressed, without caring about the state of any other keys.
 
 * `any': Indicates that the current entry will match when any of the listed keys
 	is pressed. Not very sure what this can be used for, but it seemed nice
 	to have :-)
 
-* `all': Indicates that the current entry will match when all of the listed keys
-	are pressed, without caring about the state of any other keys.
-
-NOTE: If none of the `any'/`all' attributes has been specified, actkbd requires
-	an exact match between the rule keys and the active key mask in order to
-	execute the entry. If both are specified, `all' supersedes `any'.
+NOTE: The `not', `all' and `any' attributes are checked in this exact order and
+	if more than one have been specified, the one with the highest priority
+	supersedes all others. If none of these attributes has been specified,
+	then actkbd will require an exact match between the listed keys and the
+	active key mask in order to execute the entry.
 
 * `ledon(X)': Switches on the keyboard LED X.
 
