@@ -1,5 +1,6 @@
-0.2.6:
-	* Updated the copyright notices
-	* Various minor fixes
-	* Updated the ToDo list, dropping several items
-	* Minor documentation updates
+0.2.7:
+	* Fixed a bug in the keyboard autodetection code, where the automatic
+	  detection would fail if the first entry in /proc/bus/input/devices
+	  was not a keyboard (reported by Jerome Borme).
+	* Improved the Linux-specific information in the README.
+	* Minor bugfixes

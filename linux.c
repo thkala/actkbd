@@ -68,8 +68,8 @@ int init_dev() {
     regcomp(&preg, "^H: Handlers=(.* )?kbd (.* )?event([0-9]+)", REG_EXTENDED);
     do {
 	char l[128] = "";
-	ret = fscanf(fp, "%127[^\n]%*c", l);
-	if (ret < 1)
+	void *str = fgets(l, 128, fp);
+	if (str == NULL)
 	    break;
 	ret = regexec(&preg, l, 4, pmatch, 0);
 	if (ret == 0) {

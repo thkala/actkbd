@@ -61,6 +61,12 @@ In most cases, loading the `evdev' kernel module will be sufficient:
 
 # modprobe evdev
 
+In most Linux systems the device nodes to use are named /dev/input/eventX,
+where X is a decimal unsigned number, e.g. /dev/input/event0. If the /proc
+filesystem is mounted and accessible, actkbd should be able to detect a
+usable keyboard device. You should not need to manually specify one, unless
+there are multiple keyboards present.
+
 
 
 3. Setup

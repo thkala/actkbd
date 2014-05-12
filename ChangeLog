@@ -1,3 +1,11 @@
+Sun Aug 20 14:06:59 EEST 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.7
+	* Fixed a bug in the keyboard autodetection code, where the automatic
+	  detection would fail if the first entry in /proc/bus/input/devices
+	  was not a keyboard (reported by Jerome Borme).
+	* Improved the Linux-specific information in the README.
+	* Minor bugfixes
+
 Tue May  2 21:28:16 EEST 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.6
 	* Updated the copyright notices

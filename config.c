@@ -373,7 +373,8 @@ int open_config() {
     char *line;
     key_cmd *cmd;
     confentry *lastnode = NULL, *newnode = NULL;
-    int lineno = 1, n = 0, ret = 0;
+    int lineno = 1, ret = 0;
+    size_t n = 0;
 
     /* Allow the configuration file to be overridden */
     if (!config)
