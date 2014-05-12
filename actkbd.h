@@ -27,11 +27,16 @@
 
 #include "version.h"
 
+
+#define UNUSED 0
+
+
 /* Event types */
 enum { KEY, REP, REL, INVALID };
 
 /* Return values */
 enum { OK, USAGE, MEMERR, HOSTFAIL, DEVFAIL, READERR, EVERR, CONFERR, FORKERR, INTERR, PIDERR, NOMATCH };
+
 
 /* Verbosity level */
 extern int verbose;
@@ -39,11 +44,15 @@ extern int verbose;
 /* Maximum number of keys */
 extern int maxkey;
 
+/* Device grab state */
+extern int grabbed;
+
 /* The device name */
 extern char *device;
 
 /* The configuration file name */
 extern char *config;
+
 
 /* Logging function */
 int lprintf(const char *fmt, ...);
@@ -57,20 +66,27 @@ int open_dev();
 /* Device close function */
 int close_dev();
 
+/* Device grab function */
+int grab_dev();
+
+/* Device un-grab function */
+int ungrab_dev();
+
 /* Keyboard event receiver function */
 int get_key(int *key, int *type);
+
 
 /* Key mask handling */
 int get_masksize();
 int init_mask(unsigned char **mask);
-int clear_mask(unsigned char **mask);
-int cmp_mask(unsigned char *mask0, unsigned char* mask1);
-int set_bit(unsigned char *mask, int bit, int val);
-int get_bit(unsigned char *mask, int bit);
-int lprint_mask_delim(unsigned char *mask, char d);
+void free_mask(unsigned char **mask);
 int lprint_mask(unsigned char *mask);
+int strmask(unsigned char **mask, char *keys);
+
+/* The active key mask */
 int init_key_mask();
-int clear_key_mask();
+void free_key_mask();
+void clear_key_mask();
 int set_key_bit(int bit, int val);
 int get_key_bit(int bit);
 int cmp_key_mask(unsigned char *mask0);
@@ -78,17 +94,57 @@ int lprint_key_mask_delim(char c);
 int lprint_key_mask();
 unsigned char *get_key_mask();
 
-/* Configuration file processing */
-int open_config();
-int close_config();
-int get_command(unsigned char *mask, int type, char **command);
+/* The ignored key mask */
+int init_ign_mask();
+void free_ign_mask();
+void clear_ign_mask();
+int set_ign_bit(int bit, int val);
+int get_ign_bit(int bit);
+int cmp_ign_mask(unsigned char *mask0);
+int lprint_ign_mask_delim(char c);
+int lprint_ign_mask();
+unsigned char *get_ign_mask();
+void copy_key_to_ign_mask();
+
+
+/* The attribute node struct */
+typedef struct _attr_t attr_t;
+struct _attr_t {
+    int type;			/* Attribute type */
+    void *opt;			/* Options for this attribute */
+    attr_t *next;			/* The next node */
+};
+
+/* Supported attributes */
+#define ATTR_EXEC		0
+#define ATTR_GRAB		1
+#define ATTR_UNGRAB		2
+#define ATTR_IGNREL		3
+#define ATTR_RCVREL		4
+#define ATTR_ALLREL		5
+
 
 /* The key_cmd struct */
 typedef struct {
-    unsigned char *keys;
-    int type;
-    char *module;
-    char *command;
+    unsigned char *keys;	/* The key mask */
+    int type;			/* The event type */
+    char *command;		/* The command to execute */
+
+    unsigned int attr_bits;	/* Bitwise attributes */
+
+    attr_t *attrs;		/* The attribute list */
 } key_cmd;
+
+/* The bitwise attribute values */
+#define BIT_ATTR_NOEXEC		(1<<0)	/* Do not call system() */
+#define BIT_ATTR_GRABBED	(1<<1)	/* Match only when the device is grabbed */
+#define BIT_ATTR_UNGRABBED	(1<<2)	/* Match only when the device is not grabbed */
+
+
+/* Configuration file processing */
+int open_config();
+int close_config();
+int match_key(int type, key_cmd **command);
+
 
 #endif /* _ACTKBD_H_ */

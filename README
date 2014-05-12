@@ -11,6 +11,7 @@ Contents:
 	3.1. Compilation
 	3.2. Installation
 	3.3. Configuration
+	3.3.1. Supported command attributes
 	3.4. Running
     4. Internals
     5. License
@@ -26,10 +27,10 @@ well-contained, so that support for additional platforms can be added with no or
 minimal changes to the rest of the code.
 
 It uses a plain-text configuration file which contains all the bindings. Its 
-file format has some prediction for command modules, which would allow the user 
-to perform some common actions (e.g. eject the CD-ROM or change the volume) 
-without having to call external commands. Currently, though, actkbd can only 
-execute external commands.
+file format has some prediction for command attributes, which allow the user to
+perform some common actions (e.g. eject the CD-ROM or change the volume) without
+having to call external commands. Currently, though, actkbd can only execute
+external commands, as the supported attributes only serve configuration purposes.
 
 
 
@@ -93,7 +94,7 @@ The default configuration file resides in $(sysconfdir)/actkbd.conf. It is a
 plain-text file with each line being an entry. A proper entry has the following 
 format:
 
-<keys>:<event type>:<command module>:<command>
+<keys>:<event type>:<attributes>:<command>
 
 The <keys> field is a series of numeric keycodes, separated by the `+' 
 character. `actkbd -n -s' can be used to find out any keycodes you need, as it 
@@ -102,16 +103,84 @@ will report all key presses without executing any commands.
 The <event type> string field is one of `key' (key press event), `rep' (key 
 repeat event) or `rel' (key release event). If empty, it defaults to `key'.
 
-The <command module> field is currently ignored.
+The <attributes> field contains a comma separated list of attributes. The listed
+attributes can modify the execution of the supplied command or change the state
+of actkbd in order to perform complex actions. The attribute actions are executed
+in the listed order.
 
-The <command> field is the executed command that will be passed to system(). 
+The <command> field is the executed command that will be passed to system().
 Note that in order to have non-blocking behaviour, you have to append the `&' 
 character to the command, so that /bin/sh will execute it in the background.
+Also keep in mind that the listed command attributes can affect the way the
+command is executed, if at all. Currently system() is the only interpretter
+for commands, but in the future there may be command attributes that use the
+contents of this field differently, e.g. to set a sound mixer.
 
 Lines starting with '#' are considered comments. Invalid lines are silently 
 ignored, unless a high enough verbosity level has been specified.
 
 A sample actkbd.conf is included in the actkbd distribution.
+
+
+3.3.1. Supported command attributes
+
+The supported attributes are:
+
+* `grab': This grabs the keyboard device to block other applications from
+	receiving the subsequent events. This allows the user to bind commands
+	to keys that are not normally usable because they produce symbols that
+	mess with regular keyboard operation (letters, numbers e.t.c.).
+
+* `ungrab': This releases a grabbed device, so that other programs may get the
+	key events. Please note that at least some versions of the X keyboard
+	driver (and possibly other programs) will interpret a key release event
+	as a full key press/release sequence even if the press event was never
+	received (why?). Therefore you may prefer to use the `ungrab' attribute
+	in release event bindings, rather than keypress ones, to ensure correct
+	operation.
+
+WARNING: Using the `grab' attribute without a well thought way to invoke the
+	`ungrab' command can easily leave your keyboard unusable for all other
+	applications with no way out. You may want to invoke something like the
+	following:
+
+	# sleep 120; killall -9 actkbd
+
+	in a different console, while testing you configuration, to be able to
+	reclaim your keyboard even if the configuration file is not correct.
+
+* `grabbed': This instructs actkbd to execute the specified command only if the
+	keyboard has been grabbed. This can be used to allow a key to act as an
+	extra Function key that adds extra functionality to the other keys.
+
+* `ungrabbed': This instructs actkbd to execute the specified command only if
+	the keyboard has not been grabbed.
+
+NOTE: If none of the `grabbed'/`ungrabbed' attributes has been used, the command
+	is always executed if the key mask matches. If both are specified then
+	the command is never executed - obviously the keyboard cannot be grabbed
+	and ungrabbed at the same time.
+
+* `noexec': Do not call system() to run an external command. Useful for entries
+	that only serve configuration purposes.
+
+* `exec': Use system() to run an external command here and now. Allows specific
+	ordering of the attribute actions with regard to the system() call.
+
+NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
+	attribute list is empty, an `exec' call is implied at the end of the
+	list. Always use `noexec' for entries with empty/invalid commands.
+
+* `ignrel': Ignore release events for the keys that are currently pressed. This
+	allows complex key combinations where the keys are pressed sequentially,
+	rather than simultaneously. When the key combination is completed, the
+	`allrel' and `rcvrel' attributes should be used to clear the key mask
+	and to resume the proper reception of release events.
+
+* `allrel': Clear the pressed key mask. It is the equivalent of releasing all
+	pressed keys, but is not affected by the `ignrel' attribute.
+
+* `rcvrel': Restore proper reception of key release events.
 
 
 3.4. Running

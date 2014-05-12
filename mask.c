@@ -14,6 +14,9 @@
 /* Active key mask */
 static unsigned char *mask = NULL;
 
+/* Ignored key mask */
+static unsigned char *ignmask = NULL;
+
 /* Key mask size */
 static int masksize = 0;
 
@@ -39,22 +42,26 @@ int init_mask(unsigned char **mask) {
 }
 
 
-/* Mask termination */
-int clear_mask(unsigned char **mask) {
+/* Mask deallocation */
+void free_mask(unsigned char **mask) {
     free(*mask);
     *mask = NULL;
-    return OK;
+}
+
+/* Mask zeroing */
+static void clear_mask(unsigned char **mask) {
+    memset(*mask, 0, masksize);
 }
 
 
 /* Mask comparison */
-int cmp_mask(unsigned char *mask0, unsigned char* mask1) {
-    return memcmp(mask0, mask1, masksize);
+static int cmp_mask(unsigned char *mask0, unsigned char* mask1) {
+    return (memcmp(mask0, mask1, masksize)  == 0);
 }
 
 
 /* Set a bit */
-int set_bit(unsigned char *mask, int bit, int val) {
+static int set_bit(unsigned char *mask, int bit, int val) {
     unsigned char byte = 1;
 
     if ((bit < 0) || (bit > maxkey) || (val < 0) || (val > 1)) {
@@ -73,9 +80,8 @@ int set_bit(unsigned char *mask, int bit, int val) {
     return OK;
 }
 
-
 /* Get a bit */
-int get_bit(unsigned char *mask, int bit) {
+static int get_bit(unsigned char *mask, int bit) {
     unsigned char byte = 1;
 
     if ((bit < 0) || (bit > maxkey)) {
@@ -89,7 +95,7 @@ int get_bit(unsigned char *mask, int bit) {
 
 
 /* Print a key mask */
-int lprint_mask_delim(unsigned char *mask, char d) {
+static int lprint_mask_delim(unsigned char *mask, char d) {
     int i = 0, c = 0;
 
     if (mask == NULL) {
@@ -114,13 +120,58 @@ int lprint_mask(unsigned char *mask) {
 }
 
 
+/* Use a A+B+N... string to initialise a key mask */
+int strmask(unsigned char **mask, char *keys) {
+    int l, i, k;
+
+    /* Default mask pointer */
+    *mask = NULL;
+
+    l = strlen(keys);
+
+    /* Clean up the input */
+    for (i = 0; i < l; ++i) {
+	if ((keys[i] == '+') || (keys[i] == '-'))
+	    keys[i] = ' ';
+	if (isspace(keys[i]))
+	    keys[i] = '\n';
+	if ((!isdigit(keys[i])) && (keys[i] != '\n'))
+	    return CONFERR;
+    }
+
+    init_mask(mask);
+
+    /* Set the key mask */
+    i = 0;
+    while (i < l) {
+	if (isdigit(keys[i])) {
+	    sscanf(keys + i, "%i", &k);
+	    if (set_bit(*mask, k, 1) != OK) {
+		free(*mask);
+		return CONFERR;
+	    }
+	    while (isdigit(keys[i]))
+		++i;
+	} else {
+	    ++i;
+	}
+    }
+
+    return OK;
+}
+
+
 /* The active key mask */
 int init_key_mask() {
     return init_mask(&mask);
 }
 
-int clear_key_mask() {
-    return clear_mask(&mask);
+void free_key_mask() {
+    free_mask(&mask);
+}
+
+void clear_key_mask() {
+    clear_mask(&mask);
 }
 
 int set_key_bit(int bit, int val) {
@@ -143,6 +194,42 @@ int lprint_key_mask() {
     return lprint_mask(mask);
 }
 
-unsigned char *get_key_mask() {
-    return mask;
+
+/* The ignored key mask */
+int init_ign_mask() {
+    return init_mask(&ignmask);
+}
+
+void free_ign_mask() {
+    free_mask(&ignmask);
+}
+
+void clear_ign_mask() {
+    clear_mask(&ignmask);
+}
+
+int set_ign_bit(int bit, int val) {
+    return set_bit(ignmask, bit, val);
+}
+
+int get_ign_bit(int bit) {
+    return get_bit(ignmask, bit);
+}
+
+#if UNUSED
+int cmp_ign_mask(unsigned char *mask0) {
+    return cmp_mask(ignmask, mask0);
+}
+
+int lprint_ign_mask_delim(char d) {
+    return lprint_mask_delim(ignmask, d);
+}
+
+int lprint_ign_mask() {
+    return lprint_mask(ignmask);
+}
+#endif
+
+void copy_key_to_ign_mask() {
+    memcpy(ignmask, mask, masksize);
 }

@@ -10,8 +10,10 @@
 
 #include "actkbd.h"
 
-#include <linux/input.h>
 #include <regex.h>
+#include <sys/ioctl.h>
+
+#include <linux/input.h>
 
 #define PROCFS "/proc/"
 #define HANDLERS "bus/input/handlers"
@@ -107,6 +109,38 @@ int open_dev() {
 int close_dev() {
     fclose(dev);
     return OK;
+}
+
+
+int grab_dev() {
+    int ret;
+
+    if (grabbed)
+	return 0;
+
+    ret = ioctl(fileno(dev), EVIOCGRAB, (void *)1);
+    if (ret == 0)
+	grabbed = 1;
+    else
+	lprintf("Error: could not grab %s: %s\n", device, strerror(errno));
+    
+    return ret;
+}
+
+
+int ungrab_dev() {
+    int ret;
+
+    if (!grabbed)
+	return 0;
+
+    ret = ioctl(fileno(dev), EVIOCGRAB, (void *)0);
+    if (ret == 0)
+	grabbed = 0;
+    else
+	lprintf("Error: could not ungrab %s: %s\n", device, strerror(errno));
+	
+    return ret;
 }
 
 

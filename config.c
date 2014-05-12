@@ -30,61 +30,18 @@ static int strtolower(char *str) {
 }
 
 
-static int setmask(unsigned char **mask, char *keys) {
-    int l, i, k;
-
-    /* Default mask pointer */
-    *mask = NULL;
-
-    l = strlen(keys);
-
-    /* Clean up the input */
-    for (i = 0; i < l; ++i) {
-	if ((keys[i] == '+') || (keys[i] == '-'))
-	    keys[i] = ' ';
-	if (isspace(keys[i]))
-	    keys[i] = '\n';
-	if ((!isdigit(keys[i])) && (keys[i] != '\n'))
-	    return CONFERR;
-    }
-
-    init_mask(mask);
-
-    /* Set the key mask */
-    i = 0;
-    while (i < l) {
-	if (isdigit(keys[i])) {
-	    sscanf(keys + i, "%i", &k);
-	    if (set_bit(*mask, k, 1) != OK) {
-		free(*mask);
-		return CONFERR;
-	    }
-	    while (isdigit(keys[i]))
-		++i;
-	} else {
-	    ++i;
-	}
-    }
-
-    return OK;
-}
-
-
 static int proc_config(int lineno, char *line, key_cmd **cmd) {
-    int i, l, f = 1, eventno = INVALID, ret = OK;
-    char *dup = NULL, *event = NULL, *module = NULL, *command = NULL;
+    int i, l, f = 1, eventno = INVALID, ret = CONFERR;
+    char *dup = NULL, *event = NULL, *attrs = NULL, *command = NULL, *err = NULL;
     unsigned char *keys;
-
-    /* Keep a copy of the line */
-    dup = strdup(line);
+    unsigned int attr_bits = 0;
+    attr_t *attrlst = NULL, *attr = NULL, *attr_last = NULL;
 
     l = strlen(line);
     for (i = 0; i <= l; ++i) {
     	if (((line[i] == '#') || (line[i] == '\n') || (line[i] == '\0')) && (f < 4)) {
-	    if (verbose > 1)
-		lprintf("Warning: missing fields in configuration line %i\n", lineno);
-	    ret = CONFERR;
-	    break;
+	    err = "missing fields";
+	    goto ERROR;
 	}
 	if ((line[i] == ':') && (f < 4)) {
 	    switch (f) {
@@ -92,7 +49,7 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 		    event = line + i + 1;
 		    break;
 		case 2:
-		    module = line + i + 1;
+		    attrs = line + i + 1;
 		    break;
 		case 3:
 		    command = line + i + 1;
@@ -102,60 +59,134 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	}
     }
 
-    if (ret == OK) {
-	line[event - line - 1] = '\0';
-	line[module - line - 1] = '\0';
-	line[command - line - 1] = '\0';
+    /* Keep a copy of the line */
+    dup = strdup(line);
+    if (dup == NULL) {
+	lprintf("Error: memory allocation failed\n");
+	ret = MEMERR;
+	goto ERROR;
+    }
 
-	if (line[l - 1] == '\n')
-	    line[l - 1] = '\0';
+    /* Set the field boundaries */
+    line[event - line - 1] = '\0';
+    line[attrs - line - 1] = '\0';
+    line[command - line - 1] = '\0';
+    if (line[l - 1] == '\n')
+	line[l - 1] = '\0';
 
-	strtolower(event);
-	strtolower(module);
+    /* Set the event type */
+    strtolower(event);
+    if (strcmp(event, "") == 0)
+	eventno = KEY;
+    else if (strcmp(event, "key") == 0)
+	eventno = KEY;
+    else if (strcmp(event, "rep") == 0)
+	eventno = REP;
+    else if (strcmp(event, "rel") == 0)
+	eventno = REL;
 
-	if (strcmp(event, "") == 0)
-	    eventno = KEY;
-	if (strcmp(event, "key") == 0)
-	    eventno = KEY;
-	if (strcmp(event, "rep") == 0)
-	    eventno = REP;
-	if (strcmp(event, "rel") == 0)
-	    eventno = REL;
+    if (eventno == INVALID) {
+	err = "invalid event type";
+	goto ERROR;
+    }
 
-	if ((verbose > 1) && (eventno == INVALID))
-	    lprintf("Warning: invalid event type in configuration line %i\n", lineno);
+    /* The keys are always at the beginning of the line */
+    if (strmask(&keys, line) != OK) {
+	err = "invalid key field";
+	goto ERROR;
+    }
 
-	if (eventno != INVALID) {
-	    /* The keys are always at the beginning of the line */
-	    if (setmask(&keys, line) != OK) {
-		if (verbose > 1)
-		    lprintf("Warning: invalid key field in configuration line %i\n", lineno);
-		ret = CONFERR;
-	    }
+    /* Set the module list */
+    strtolower(attrs);
+    while ((event = strsep(&attrs, ", \t")) != NULL) {
+	int type = -1;
+	void *opt = NULL;
+
+	if (strlen(event) == 0)
+	    continue;
+
+	if (strcmp(event, "noexec") == 0) {
+	    attr_bits |= BIT_ATTR_NOEXEC;
+	} else if (strcmp(event, "grabbed") == 0) {
+	    attr_bits |= BIT_ATTR_GRABBED;
+	} else if (strcmp(event, "ungrabbed") == 0) {
+	    attr_bits |= BIT_ATTR_UNGRABBED;
+	} else if (strcmp(event, "exec") == 0) {
+	    type = ATTR_EXEC;
+	} else if (strcmp(event, "grab") == 0) {
+	    type = ATTR_GRAB;
+	} else if (strcmp(event, "ungrab") == 0) {
+	    type = ATTR_UNGRAB;
+	} else if (strcmp(event, "ignrel") == 0) {
+	    type = ATTR_IGNREL;
+	} else if (strcmp(event, "rcvrel") == 0) {
+	    type = ATTR_RCVREL;
+	} else if (strcmp(event, "allrel") == 0) {
+	    type = ATTR_ALLREL;
 	} else {
-	    ret = CONFERR;
+	    lprintf("Warning: unknown attribute %s\n", event);
+	}
+
+	if (type != -1) {
+	    attr = (attr_t *)(malloc(sizeof(attr_t)));
+	    if (attr == NULL) {
+		lprintf("Error: memory allocation failed\n");
+		ret = MEMERR;
+		goto ERROR;
+	    }
+
+	    attr->type = type;
+	    attr->opt = opt;
+	    attr->next = NULL;
+
+	    if (attrlst == NULL) {
+		attrlst = attr;
+		attr_last = attr;
+	    } else {
+		attr_last->next = attr;
+		attr_last = attr;
+	    }
 	}
     }
 
-    if (ret != OK) {
-	if (verbose > 0)
-	    lprintf("Warning: discarding configuration line %i:\n\t%s%c", lineno, dup, (dup[l - 1] == '\n')?'\0':'\n');
-	*cmd = NULL;
+    *cmd = (key_cmd *)(malloc(sizeof(key_cmd)));
+    if (*cmd == NULL) {
+	lprintf("Error: memory allocation failed\n");
+	ret = MEMERR;
+	goto ERROR;
     } else {
-	*cmd = (key_cmd *)(malloc(sizeof(key_cmd)));
-	if (*cmd == NULL) {
-	    lprintf("Error: memory allocation failed\n");
-	    ret = MEMERR;
-	} else {
-	    (*cmd)->keys = keys;
-	    (*cmd)->type = eventno;
-	    (*cmd)->module = strdup(module);
-	    (*cmd)->command = strdup(command);
-	}
+	(*cmd)->keys = keys;
+	(*cmd)->type = eventno;
+	(*cmd)->command = strdup(command);
+	(*cmd)->attr_bits = attr_bits;
+	(*cmd)->attrs = attrlst;
     }
 
     /* Destroy the line copy */
     free(dup);
+
+    return OK;
+
+    /* Error handler */
+ERROR:
+    if ((verbose > 1) && (err != NULL))
+	lprintf("Warning: %s in configuration line %i\n", err, lineno);
+    if (verbose > 0)
+	lprintf("Warning: discarding configuration line %i:\n\t%s%c", lineno,
+		(dup != NULL)?dup:line,
+		(((dup != NULL)?dup:line)[l - 1] == '\n')?'\0':'\n');
+
+    *cmd = NULL;
+
+    /* Free the attribute list */
+    while (attrlst != NULL) {
+	attr = attrlst;
+	attrlst = attrlst->next;
+	free(attr);
+    }
+
+    if (dup != NULL)
+	free(dup);
 
     return ret;
 }
@@ -168,6 +199,59 @@ typedef struct _confentry {
 
 
 static confentry *list = NULL;
+
+
+static void print_attrs(key_cmd *cmd) {
+    attr_t *attr;
+    char *sep = "";
+
+    if (cmd == NULL)
+	return;
+
+    if ((cmd->attr_bits & BIT_ATTR_NOEXEC) > 0) {
+	lprintf("%snoexec", sep);
+	sep = ",";
+    }
+    if ((cmd->attr_bits & BIT_ATTR_GRABBED) > 0) {
+	lprintf("%sgrabbed", sep);
+	sep = ",";
+    }
+    if ((cmd->attr_bits & BIT_ATTR_UNGRABBED) > 0) {
+	lprintf("%sungrabbed", sep);
+	sep = ",";
+    }
+
+    attr = cmd->attrs;
+    while (attr != NULL) {
+	char *str;
+	switch (attr->type) {
+	    case ATTR_EXEC:
+		str = "exec";
+		break;
+	    case ATTR_GRAB:
+		str = "grab";
+		break;
+	    case ATTR_UNGRAB:
+		str = "ungrab";
+		break;
+	    case ATTR_IGNREL:
+		str = "ignrel";
+		break;
+	    case ATTR_RCVREL:
+		str = "rcvrel";
+		break;
+	    case ATTR_ALLREL:
+		str = "allrel";
+		break;
+	    default:
+		str = "unknown";
+		break;
+	}
+	lprintf("%s%s", sep, str);
+	attr = attr->next;
+	sep = ",";
+    }
+}
 
 
 int open_config() {
@@ -214,7 +298,9 @@ int open_config() {
 	    if (verbose > 1) {
 		lprintf("Config: ");
 		lprint_mask(cmd->keys);
-		lprintf(" -:- %s -:- %s -:- %s\n", (cmd->type == KEY)?"key":((cmd->type == REP)?"rep":"rel"), cmd->module, cmd->command);
+		lprintf(" -:- %s -:- ", (cmd->type == KEY)?"key":((cmd->type == REP)?"rep":"rel"));
+		print_attrs(cmd);
+		lprintf(" -:- %s\n", cmd->command);
 	    }
 	}
 	free(line);
@@ -228,30 +314,47 @@ int open_config() {
 
 
 int close_config() {
-    confentry *node = list, *tmp;
+    confentry *node = list;
+    void *tmp;
+    attr_t *attr;
+
     while (node != NULL) {
-	clear_mask(&(node->cmd->keys));
-	free(node->cmd->module);
+	free_mask(&(node->cmd->keys));
 	free(node->cmd->command);
+
+	/* Free the attribute list */
+	attr = node->cmd->attrs;
+	while (attr != NULL) {
+	    tmp = attr;
+	    attr = attr->next;
+	    free(tmp);
+	}
+
 	free(node->cmd);
 	tmp = node->next;
 	free(node);
 	node = tmp;
     }
     list = NULL;
+
     return OK;
 }
 
 
-int get_command(unsigned char *mask, int type, char **command) {
+int match_key(int type, key_cmd **command) {
     confentry *node = list;
 
     *command = NULL;
 
     while (node != NULL) {
-	if ((node->cmd->type == type) && (cmp_mask(mask, node->cmd->keys) == 0)) {
-	    *command = node->cmd->command;
-	    return OK;
+	if ((node->cmd->type == type) && cmp_key_mask(node->cmd->keys)) {
+		if ((((node->cmd->attr_bits & BIT_ATTR_GRABBED) > 0) && (!grabbed)) ||
+			(((node->cmd->attr_bits & BIT_ATTR_UNGRABBED) > 0) && (grabbed))) {
+		    node = node->next;
+		    continue;
+		}
+		*command = node->cmd;
+		return OK;
 	}
 	node = node->next;
     }

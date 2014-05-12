@@ -1,3 +1,18 @@
+Tue Mar  7 02:32:15 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.0
+	* Added the `grab'/`ungrab' attributes that allow keyboard grabbbing
+	* Added the `grabbed'/`ungrabbed' attributes to fine tune the key
+	  shortcut configuration
+	* Added the `exec'/`noexec' attributes to control the execution of
+	  external commands
+	* Added the `ignrel'/`rcvrel'/`allrel' attributes to allow for key
+	  combinations where the keys are pressed sequentially rather than
+	  simultaneously.
+	* Fixed the -v/--verbose help message line
+	* Updated documentation
+	* Some minor Makefile fixes
+	* Minor fixes and clean-ups here and there
+
 Tue Nov 22 23:53:12 EEST 2005 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.1.2
 	* Improve automatic keyboard detection

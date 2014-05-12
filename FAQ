@@ -45,8 +45,9 @@ KeyBoard Daemon. Or...
 
 * Does it work ?
 
-I have performed some minimal testing and it seems to work fine. I will have to 
-receive quite a lot of feedback before I mark it as stable, though.
+It is now launched at boot time on my system and it seems to work without any
+problems. I will still have to receive quite a bit of feedback before I mark it
+as stable, though.
 
 
 * How does it work ?

@@ -10,6 +10,8 @@
 
 * Implement the module subsystem. Modules to control sound mixers e.t.c. could
   be built.
+  UPDATE: The attribute infrastructure introduced in actkbd-0.2.0 is the core
+	of the module subsystem. Now we are just missing the modules...
 
 * Use select() to handle multiple keyboards, instead of just the first one,
   and get a USB keyboard to test it.
@@ -34,3 +36,5 @@
   huge fixed keymaps ?
 
 * Create manual pages: actkbd.1, actkbd.conf.5
+
+* Autotools ?

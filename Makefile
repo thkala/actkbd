@@ -24,7 +24,7 @@ actkbd: actkbd.o mask.o config.o linux.o
 actkbd.o : actkbd.h
 mask.o : actkbd.h
 
-config.o : actkbd.h
+config.o : actkbd.h config.c
 	$(CC) $(CFLAGS)	-c -o config.o config.c -DCONFIG=\"$(sysconfdir)/actkbd.conf\"
 
 linux.o : actkbd.h

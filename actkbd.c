@@ -26,6 +26,12 @@ int uselog = 0;
 /* Maximum number of keys */
 int maxkey = 0;
 
+/* Device grab state */
+int grabbed = 0;
+
+/* Ignore release events */
+int ignrel = 0;
+
 /* Keyboard device name */
 char *device = NULL;
 
@@ -48,7 +54,8 @@ static int usage() {
 	"        -n, --noexec            Do not execute any commands\n"
 	"        -p, --pidfile <file>    Use a file to store the PID\n"
 	"        -q, --quiet             Suppress all console messages\n"
-	"        -v, --verbose [level]   Specify the verbosity level (0-9)\n"
+	"        -v[level]\n"
+	"        --verbose=[level]       Specify the verbosity level (0-9)\n"
 	"        -V, --version           Show version information\n"
 	"        -x, --showexec          Report executed commands\n"
 	"        -s, --showkey           Report key presses\n"
@@ -70,7 +77,8 @@ void on_hup(int signum) {
 	lprintf("Discarding old configuration\n");
 
     close_config();
-    clear_key_mask();
+    free_key_mask();
+    free_ign_mask();
 
     if (verbose > 1)
 	lprintf("Reading new configuration\n");
@@ -78,6 +86,8 @@ void on_hup(int signum) {
     if ((ret = open_config()) != OK)
 	exit(ret);
     if ((ret = init_key_mask()) != OK)
+	exit(ret);
+    if ((ret = init_ign_mask()) != OK)
 	exit(ret);
 
     if (verbose > 1)
@@ -91,7 +101,8 @@ void on_hup(int signum) {
 void on_term(int signum) {
     close_config();
     close_dev();
-    clear_key_mask();
+    free_key_mask();
+    free_ign_mask();
 
     if (detach)
 	lprintf("actkbd %s terminating for %s\n", VERSION, device);
@@ -128,9 +139,20 @@ static int write_pid() {
 }
 
 
+/* External command execution */
+static int ext_exec(char *cmd, int noexec, int showexec) {
+    if ((verbose > 0) || showexec)
+	lprintf("Executing: %s\n", cmd);
+    if (!noexec)
+	return system(cmd);
+
+    return 0;
+}
+
+
 int main(int argc, char **argv) {
     int ret, key, type;
-    char *command;
+    key_cmd *cmd;
 
     /* Options */
     int help = 0, noexec = 0, version = 0, showexec = 0, showkey = 0;
@@ -253,6 +275,9 @@ int main(int argc, char **argv) {
     if ((ret = init_key_mask()) != OK)
 	return ret;
 
+    if ((ret = init_ign_mask()) != OK)
+	return ret;
+
     if ((ret = open_dev()) != OK)
 	return ret;
 
@@ -281,6 +306,8 @@ int main(int argc, char **argv) {
     signal(SIGTERM, on_term);
 
     while (get_key(&key, &type) == OK) {
+	int exec_ok = 0;
+
 	if ((type == KEY) || (type == REP))
 	    set_key_bit(key, 1);
 
@@ -295,15 +322,59 @@ int main(int argc, char **argv) {
 	    lprintf("\n");
 	}
 
-	ret = get_command(get_key_mask(), type, &command);
+	ret = match_key(type, &cmd);
 	if (ret == OK) {
-	    if ((verbose > 0) || showexec)
-		lprintf("Executing: %s\n", command);
-	    if (!noexec)
-		system(command);
+	    attr_t *attr;
+
+	    /* Attribute implementation */
+	    attr = cmd->attrs;
+	    while (attr != NULL) {
+		char *str, *opt = "";
+		switch (attr->type) {
+		    case ATTR_EXEC:
+			str = "exec";
+			ext_exec(cmd->command, noexec, showexec);
+			exec_ok = 1;
+			break;
+		    case ATTR_GRAB:
+			str = "grab";
+			grab_dev();
+			break;
+		    case ATTR_UNGRAB:
+			str = "ungrab";
+			ungrab_dev();
+			break;
+		    case ATTR_IGNREL:
+			str = "ignrel";
+			copy_key_to_ign_mask();
+			ignrel = 1;
+			break;
+		    case ATTR_RCVREL:
+			str = "rcvrel";
+			ignrel = 0;
+			break;
+		    case ATTR_ALLREL:
+			str = "allrel";
+			clear_key_mask();
+			break;
+		    default:
+			str = "unknown";
+			break;
+		}
+		if ((verbose > 0) || showexec)
+		    lprintf("Attribute: %s(%s)\n", str, opt);
+
+		attr = attr->next;
+	    }
+
+	    /* Fall back on command execution */
+	    if ((!exec_ok) && ((cmd->attr_bits & BIT_ATTR_NOEXEC) == 0)) {
+		ext_exec(cmd->command, noexec, showexec);
+		exec_ok = 1;
+	    }
 	}
 
-	if (type == REL)
+	if ((type == REL) && ((!ignrel) || (get_ign_bit(key) == 0)))
 	    set_key_bit(key, 0);
     }
 
