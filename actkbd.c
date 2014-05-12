@@ -329,7 +329,8 @@ int main(int argc, char **argv) {
 	    /* Attribute implementation */
 	    attr = cmd->attrs;
 	    while (attr != NULL) {
-		char *str, *opt = "";
+		char *str, opt[32] = { '\0' };
+		int out_type = INVALID, out_key = -1;
 		switch (attr->type) {
 		    case ATTR_EXEC:
 			str = "exec";
@@ -357,10 +358,29 @@ int main(int argc, char **argv) {
 			str = "allrel";
 			clear_key_mask();
 			break;
+		    case ATTR_KEY:
+			str = "key";
+			out_type = KEY;
+			break;
+		    case ATTR_REL:
+			str = "rel";
+			out_type = REL;
+			break;
+		    case ATTR_REP:
+			str = "rep";
+			out_type = REP;
+			break;
 		    default:
 			str = "unknown";
 			break;
 		}
+
+		if (out_type != INVALID) {
+		    out_key = (((int)(attr->opt)) >= 0)?(int)(attr->opt):key;
+		    snprintf(opt, 32, "%i", out_key);
+		    snd_key(out_key, out_type);
+		}
+
 		if ((verbose > 0) || showexec)
 		    lprintf("Attribute: %s(%s)\n", str, opt);
 

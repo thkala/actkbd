@@ -101,6 +101,7 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
     while ((event = strsep(&attrs, ", \t")) != NULL) {
 	int type = -1;
 	void *opt = NULL;
+	char *num = NULL;
 
 	if (strlen(event) == 0)
 	    continue;
@@ -111,6 +112,10 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	    attr_bits |= BIT_ATTR_GRABBED;
 	} else if (strcmp(event, "ungrabbed") == 0) {
 	    attr_bits |= BIT_ATTR_UNGRABBED;
+	} else if (strcmp(event, "any") == 0) {
+	    attr_bits |= BIT_ATTR_ANY;
+	} else if (strcmp(event, "all") == 0) {
+	    attr_bits |= BIT_ATTR_ALL;
 	} else if (strcmp(event, "exec") == 0) {
 	    type = ATTR_EXEC;
 	} else if (strcmp(event, "grab") == 0) {
@@ -123,8 +128,33 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	    type = ATTR_RCVREL;
 	} else if (strcmp(event, "allrel") == 0) {
 	    type = ATTR_ALLREL;
+	} else if (strncmp(event, "key(", 4) == 0) {
+	    type = ATTR_KEY;
+	    event += 4;
+	    num = strsep(&event, "()");
+	} else if (strncmp(event, "rel(", 4) == 0) {
+	    type = ATTR_REL;
+	    event += 4;
+	    num = strsep(&event, "()");
+	} else if (strncmp(event, "rep(", 4) == 0) {
+	    type = ATTR_REP;
+	    event += 4;
+	    num = strsep(&event, "()");
 	} else {
 	    lprintf("Warning: unknown attribute %s\n", event);
+	}
+
+	if (num != NULL) {
+	    errno = 0;
+	    if (strlen(num) > 0)
+		opt = (void *)((int)strtol(num, (char **)NULL, 10));
+	    else
+		opt = (void *)((int)(-1));
+
+	    if (errno != 0) {
+		err = "invalid attribute argument";
+		goto ERROR;
+	    }
 	}
 
 	if (type != -1) {
@@ -220,10 +250,19 @@ static void print_attrs(key_cmd *cmd) {
 	lprintf("%sungrabbed", sep);
 	sep = ",";
     }
+    if ((cmd->attr_bits & BIT_ATTR_ANY) > 0) {
+	lprintf("%sany", sep);
+	sep = ",";
+    }
+    if ((cmd->attr_bits & BIT_ATTR_ALL) > 0) {
+	lprintf("%sall", sep);
+	sep = ",";
+    }
 
     attr = cmd->attrs;
     while (attr != NULL) {
-	char *str;
+	char *str = "";
+	char opt[32] = { '\0' };
 	switch (attr->type) {
 	    case ATTR_EXEC:
 		str = "exec";
@@ -243,11 +282,20 @@ static void print_attrs(key_cmd *cmd) {
 	    case ATTR_ALLREL:
 		str = "allrel";
 		break;
+	    case ATTR_KEY:
+		snprintf(opt, 32, "key(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_REL:
+		snprintf(opt, 32, "rel(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_REP:
+		snprintf(opt, 32, "rep(%i)", (int)(attr->opt));
+		break;
 	    default:
 		str = "unknown";
 		break;
 	}
-	lprintf("%s%s", sep, str);
+	lprintf("%s%s%s", sep, str, opt);
 	attr = attr->next;
 	sep = ",";
     }
@@ -347,14 +395,17 @@ int match_key(int type, key_cmd **command) {
     *command = NULL;
 
     while (node != NULL) {
-	if ((node->cmd->type == type) && cmp_key_mask(node->cmd->keys)) {
-		if ((((node->cmd->attr_bits & BIT_ATTR_GRABBED) > 0) && (!grabbed)) ||
-			(((node->cmd->attr_bits & BIT_ATTR_UNGRABBED) > 0) && (grabbed))) {
-		    node = node->next;
-		    continue;
-		}
-		*command = node->cmd;
-		return OK;
+	if ((node->cmd->type != type) ||
+		(((node->cmd->attr_bits & BIT_ATTR_GRABBED) > 0) && (!grabbed)) ||
+		(((node->cmd->attr_bits & BIT_ATTR_UNGRABBED) > 0) && (grabbed))) {
+	    node = node->next;
+	    continue;
+	}
+	if (cmp_key_mask(node->cmd->keys,
+		(node->cmd->attr_bits & BIT_ATTR_ANY) > 0,
+		(node->cmd->attr_bits & BIT_ATTR_ALL) > 0)) {
+	    *command = node->cmd;
+	    return OK;
 	}
 	node = node->next;
     }

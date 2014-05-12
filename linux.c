@@ -97,7 +97,7 @@ int init_dev() {
 
 
 int open_dev() {
-    dev = fopen(device, "r");
+    dev = fopen(device, "a+");
     if (dev == NULL) {
 	lprintf("Error: could not open %s: %s\n", device, strerror(errno));
 	return DEVFAIL;
@@ -149,7 +149,7 @@ int get_key(int *key, int *type) {
     int ret;
 
     do {
-	ret = fread (&ev, sizeof (struct input_event), 1, dev);
+	ret = fread(&ev, sizeof (struct input_event), 1, dev);
 	if (ret < 1) {
 	    lprintf("Error: failed to read event from %s: %s", device, strerror(errno));
 	    return READERR;
@@ -178,6 +178,37 @@ int get_key(int *key, int *type) {
     if (*type == INVALID) {
         lprintf("Error: invalid event read from %s: code = %u, value = %u", device, ev.code, ev.value);
 	return EVERR;
+    }
+
+    return OK;
+}
+
+
+int snd_key(int key, int type) {
+    struct input_event ev;
+    int ret;
+
+    ev.type = EV_KEY;
+    ev.code = key;
+
+    switch (type) {
+	case KEY:
+	    ev.value = 1;
+	    break;
+	case REL:
+	    ev.value = 0;
+	    break;
+	case REP:
+	    ev.value = 2;
+	    break;
+	default:
+	    return EINVAL;
+    }
+
+    ret = fwrite(&ev, sizeof (struct input_event), 1, dev);
+    if (ret < 1) {
+	lprintf("Error: failed to send event to %s: %s", device, strerror(errno));
+	return WRITEERR;
     }
 
     return OK;

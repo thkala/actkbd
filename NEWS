@@ -1,13 +1,5 @@
-0.2.0:
-	* Added the `grab'/`ungrab' attributes that allow keyboard grabbbing
-	* Added the `grabbed'/`ungrabbed' attributes to fine tune the key
-	  shortcut configuration
-	* Added the `exec'/`noexec' attributes to control the execution of
-	  external commands
-	* Added the `ignrel'/`rcvrel'/`allrel' attributes to allow for key
-	  combinations where the keys are pressed sequentially rather than
-	  simultaneously.
-	* Fixed the -v/--verbose help message line
-	* Updated documentation
-	* Some minor Makefile fixes
-	* Minor fixes and clean-ups here and there
+0.2.1:
+	* Added the `key()',`rel()' and `rep()' attributes that allow the
+	  injection of keyboard events to the system input layer.
+	* Added the `any' and `all' attributes to fine tune key matching.
+	* Documentation updates

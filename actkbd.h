@@ -35,7 +35,8 @@
 enum { KEY, REP, REL, INVALID };
 
 /* Return values */
-enum { OK, USAGE, MEMERR, HOSTFAIL, DEVFAIL, READERR, EVERR, CONFERR, FORKERR, INTERR, PIDERR, NOMATCH };
+enum { OK, USAGE, MEMERR, HOSTFAIL, DEVFAIL, READERR, WRITEERR, EVERR, CONFERR,
+	FORKERR, INTERR, PIDERR, NOMATCH };
 
 
 /* Verbosity level */
@@ -75,6 +76,9 @@ int ungrab_dev();
 /* Keyboard event receiver function */
 int get_key(int *key, int *type);
 
+/* Send an event to the input layer */
+int snd_key(int key, int type);
+
 
 /* Key mask handling */
 int get_masksize();
@@ -89,7 +93,7 @@ void free_key_mask();
 void clear_key_mask();
 int set_key_bit(int bit, int val);
 int get_key_bit(int bit);
-int cmp_key_mask(unsigned char *mask0);
+int cmp_key_mask(unsigned char *mask0, int any, int all);
 int lprint_key_mask_delim(char c);
 int lprint_key_mask();
 unsigned char *get_key_mask();
@@ -100,7 +104,7 @@ void free_ign_mask();
 void clear_ign_mask();
 int set_ign_bit(int bit, int val);
 int get_ign_bit(int bit);
-int cmp_ign_mask(unsigned char *mask0);
+int cmp_ign_mask(unsigned char *mask0, int any, int all);
 int lprint_ign_mask_delim(char c);
 int lprint_ign_mask();
 unsigned char *get_ign_mask();
@@ -122,6 +126,9 @@ struct _attr_t {
 #define ATTR_IGNREL		3
 #define ATTR_RCVREL		4
 #define ATTR_ALLREL		5
+#define ATTR_KEY		6
+#define ATTR_REL		7
+#define ATTR_REP		8
 
 
 /* The key_cmd struct */
@@ -139,6 +146,8 @@ typedef struct {
 #define BIT_ATTR_NOEXEC		(1<<0)	/* Do not call system() */
 #define BIT_ATTR_GRABBED	(1<<1)	/* Match only when the device is grabbed */
 #define BIT_ATTR_UNGRABBED	(1<<2)	/* Match only when the device is not grabbed */
+#define BIT_ATTR_ANY		(1<<3)	/* Match if any of the specified keys is pressed */
+#define BIT_ATTR_ALL		(1<<4)	/* Match if all of the specified keys is pressed */
 
 
 /* Configuration file processing */

@@ -1,3 +1,10 @@
+Tue Mar  7 16:33:33 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.1
+	* Added the `key()',`rel()' and `rep()' attributes that allow the
+	  injection of keyboard events to the system input layer.
+	* Added the `any' and `all' attributes to fine tune key matching.
+	* Documentation updates
+
 Tue Mar  7 02:32:15 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.0
 	* Added the `grab'/`ungrab' attributes that allow keyboard grabbbing

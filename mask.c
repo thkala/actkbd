@@ -55,7 +55,26 @@ static void clear_mask(unsigned char **mask) {
 
 
 /* Mask comparison */
-static int cmp_mask(unsigned char *mask0, unsigned char* mask1) {
+static int cmp_mask(unsigned char *mask0, unsigned char* mask1, int any, int all) {
+    int i;
+
+    /* Require that all mask1 bits are present in mask 0 */
+    if (all) {
+	for (i = 0; i < masksize; ++i)
+	    if ((mask0[i] & mask1[i]) != mask1[i])
+		return 0;
+	return 1;
+    }
+
+    /* True if any mask1 bits are present in mask 0 */
+    if (any) {
+	for (i = 0; i < masksize; ++i)
+	    if ((mask0[i] & mask1[i]) != 0)
+		return 1;
+	return 0;
+    }
+
+    /* Require an exact match */
     return (memcmp(mask0, mask1, masksize)  == 0);
 }
 
@@ -131,7 +150,7 @@ int strmask(unsigned char **mask, char *keys) {
 
     /* Clean up the input */
     for (i = 0; i < l; ++i) {
-	if ((keys[i] == '+') || (keys[i] == '-'))
+	if ((keys[i] == '+') || (keys[i] == '-') || (keys[i] == ','))
 	    keys[i] = ' ';
 	if (isspace(keys[i]))
 	    keys[i] = '\n';
@@ -182,8 +201,8 @@ int get_key_bit(int bit) {
     return get_bit(mask, bit);
 }
 
-int cmp_key_mask(unsigned char *mask0) {
-    return cmp_mask(mask, mask0);
+int cmp_key_mask(unsigned char *mask0, int any, int all) {
+    return cmp_mask(mask, mask0, any, all);
 }
 
 int lprint_key_mask_delim(char d) {
@@ -204,6 +223,7 @@ void free_ign_mask() {
     free_mask(&ignmask);
 }
 
+#if UNUSED
 void clear_ign_mask() {
     clear_mask(&ignmask);
 }
@@ -211,14 +231,15 @@ void clear_ign_mask() {
 int set_ign_bit(int bit, int val) {
     return set_bit(ignmask, bit, val);
 }
+#endif
 
 int get_ign_bit(int bit) {
     return get_bit(ignmask, bit);
 }
 
 #if UNUSED
-int cmp_ign_mask(unsigned char *mask0) {
-    return cmp_mask(ignmask, mask0);
+int cmp_ign_mask(unsigned char *mask0, int any, int all) {
+    return cmp_mask(ignmask, mask0, any, all);
 }
 
 int lprint_ign_mask_delim(char d) {

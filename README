@@ -103,10 +103,11 @@ will report all key presses without executing any commands.
 The <event type> string field is one of `key' (key press event), `rep' (key 
 repeat event) or `rel' (key release event). If empty, it defaults to `key'.
 
-The <attributes> field contains a comma separated list of attributes. The listed
-attributes can modify the execution of the supplied command or change the state
-of actkbd in order to perform complex actions. The attribute actions are executed
-in the listed order.
+The <attributes> field contains an optional comma or whitespace separated list
+of attributes. The listed attributes can modify the execution of the supplied
+command or change the state of actkbd in order to perform complex actions. The
+attribute actions are executed in the listed order. If no attribute has been
+specified actkbd falls back on to calling system().
 
 The <command> field is the executed command that will be passed to system().
 Note that in order to have non-blocking behaviour, you have to append the `&' 
@@ -119,7 +120,11 @@ contents of this field differently, e.g. to set a sound mixer.
 Lines starting with '#' are considered comments. Invalid lines are silently 
 ignored, unless a high enough verbosity level has been specified.
 
-A sample actkbd.conf is included in the actkbd distribution.
+Note that when actkbd searches for an entry to execute, only the first matching
+entry is used. Therefore always make sure that the entries in the configuration
+file are ordered properly.
+
+A sample actkbd.conf file is included in the actkbd distribution.
 
 
 3.3.1. Supported command attributes
@@ -181,6 +186,31 @@ NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
 	pressed keys, but is not affected by the `ignrel' attribute.
 
 * `rcvrel': Restore proper reception of key release events.
+
+* `key(X)': Send a X key press event to the input layer of the system.
+
+* `rel(X)': Send a X key release event to the input layer of the system.
+
+* `rep(X)': Send a X key repeat event to the input layer of the system.
+
+NOTE: An empty value for the `key()', `rel()' and `rep()' attributes instructs
+	actkbd to use the key value that triggered the current rule.
+
+WARNING: The `key()', `rel()' and `rep()' attributes, if used without caution,
+	may cause event loops that can bring the system to its knees. Also it
+	seems that continuous event loops can cause actkbd to miss some events
+	with various dire results. Use at your own risk.
+
+* `any': Indicates that the current entry will match when any of the listed keys
+	is pressed. Not very sure what this can be used for, but it seemed nice
+	to have :-)
+
+* `all': Indicates that the current entry will match when all of the listed keys
+	are pressed, without caring about the state of any other keys.
+
+NOTE: If none of the `any'/`all' attributes has been specified, actkbd requires
+	an exact match between the rule keys and the active key mask in order to
+	execute the entry. If both are specified, `all' supersedes `any'.
 
 
 3.4. Running
