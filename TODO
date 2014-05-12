@@ -16,7 +16,7 @@
 
 * Dynamically attach to new keyboards - the select() infrastrusture is a
   prerequisite for this - can we do this without periodically reading the
-  /proc/bus/input/devices file ?
+  /proc/bus/input/devices file ? Perhaps, with some help from hotplug...
 
 * Per-keyboard configuration - this may never be implemented since it would
   complicate the code. Perhaps a hotplug script could handle this better.
@@ -34,5 +34,3 @@
   huge fixed keymaps ?
 
 * Create manual pages: actkbd.1, actkbd.conf.5
-
-* Make CONFIG follow the sysconfdir Makefile variable

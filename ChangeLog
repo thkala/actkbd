@@ -1,3 +1,9 @@
+Sat Aug 20 02:09:15 EEST 2005 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.1.1
+	* Minor documentation changes
+	* Make the default configuration file location
+	  follow the sysconfdir Makefile variable
+
 Fri Aug 19 10:53:12 EEST 2005 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Initial public release (0.1.0)
 	* Issue a warning (instead of error) on a missing configuration file

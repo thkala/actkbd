@@ -19,16 +19,16 @@ Contents:
 
 1. Introduction
 
-actkbd is a simple daemon that binds actions to keyboard events. It recognises
-key combinations and can handle press, repeat and release events. Currently it
-only supports the linux-2.6 evdev interface, but the platform-specific code is
-well-contained, so that support for additional platforms can be added with no
-or minimal changes to the rest of the code.
+actkbd is a simple daemon that binds actions to keyboard events. It recognises 
+key combinations and can handle press, repeat and release events. Currently it 
+only supports the linux-2.6 evdev interface, but the platform-specific code is 
+well-contained, so that support for additional platforms can be added with no or 
+minimal changes to the rest of the code.
 
-It uses a plain-text configuration file which contains all the bindings. Its
-file format has some prediction for command modules, which would allow the user
-to perform some common actions (e.g. eject the CD-ROM or change the volume)
-without having to call external commands. Currently, though, actkbd can only
+It uses a plain-text configuration file which contains all the bindings. Its 
+file format has some prediction for command modules, which would allow the user 
+to perform some common actions (e.g. eject the CD-ROM or change the volume) 
+without having to call external commands. Currently, though, actkbd can only 
 execute external commands.
 
 
@@ -42,6 +42,7 @@ Currently only the following platforms are supported:
 The following platforms will probably never be supported:
 
 * Windows - no POSIX, no support
+* MacOS - contrary to MacOS X, MacOS has no POSIX subsystem
 * BeOS - unless someone can resurrect it
 
 
@@ -49,7 +50,7 @@ The following platforms will probably never be supported:
 
 * Linux 2.6.x
 
-To run actkbd under Linux 2.6.x you need to have the event interface available.
+To run actkbd under Linux 2.6.x you need to have the event interface available. 
 In most cases, loading the `evdev' kernel module will be sufficient:
 
 # modprobe evdev
@@ -64,47 +65,50 @@ A simple call to `make' is normally all you need to compile actkbd:
 
 $ make
 
-You can override the CFLAGS variable to provide optimisation flags e.t.c. The
-DEBUG variable can be used to enable debugging - if you are using gcc, setting
-DEBUG to "-g" would probably do.
+To change the default location of the configuration file, you have to override 
+the sysconfdir Makefile variable. You can also override the CFLAGS variable to 
+provide optimisation flags e.t.c. The DEBUG variable can be used to enable 
+debugging - if you are using gcc, setting DEBUG to "-g" would probably do.
 
 
 3.2. Installation
 
-First verify with `make -n install' the installation paths. By default, the
-installation prefix is /usr/local and the actkbd daemon binary is installed in
-$(prefix)/sbin. A configuration placeholder is placed in /etc. You can set the
-prefix, sbindir and sysconfdir variables to override these defaults. Then run
-`make install' as root to perform the actual installation:
+First verify with `make -n install' the installation paths. By default, the 
+installation prefix is /usr/local and the actkbd daemon binary is installed in 
+$(prefix)/sbin. A configuration placeholder is placed in $(sysconfdir), which by 
+default is /etc. You can set the prefix, sbindir and sysconfdir variables to 
+override these defaults. Then run `make install' as root to perform the actual 
+installation:
 
 # make install
 
-Bear in mind that currently the location of the configuration file must be
-explicitly specified (-c) in the actkbd command line options if the default
-(/etc/actkbd.conf) location is not valid.
+Bear in mind that currently the location of the configuration file must be 
+explicitly specified (-c) in the actkbd command line options if the default 
+($(sysconfdir)/actkbd.conf) location is not valid.
 
 
 3.3. Configuration
 
-The default configuration file resides in /etc/actkbd.conf. It is a plain-text
-file with each line being an entry. A proper entry has the following format:
+The default configuration file resides in $(sysconfdir)/actkbd.conf. It is a 
+plain-text file with each line being an entry. A proper entry has the following 
+format:
 
 <keys>:<event type>:<command module>:<command>
 
-The <keys> field is a series of numeric keycodes, separated by the `+'
-character. `actkbd -n -s' can be used to find out any keycodes you need, as
-it will report all key presses without executing any commands.
+The <keys> field is a series of numeric keycodes, separated by the `+' 
+character. `actkbd -n -s' can be used to find out any keycodes you need, as it 
+will report all key presses without executing any commands.
 
-The <event type> string field is one of `key' (key press event), `rep' (key
+The <event type> string field is one of `key' (key press event), `rep' (key 
 repeat event) or `rel' (key release event). If empty, it defaults to `key'.
 
 The <command module> field is currently ignored.
 
-The <command> field is the executed command that will be passed to system(). Note
-that in order to have non-blocking behaviour, you have to append the `&' character
-to the command, so that /bin/sh will execute it in the background.
+The <command> field is the executed command that will be passed to system(). 
+Note that in order to have non-blocking behaviour, you have to append the `&' 
+character to the command, so that /bin/sh will execute it in the background.
 
-Lines starting with '#' are considered comments. Invalid lines are silently
+Lines starting with '#' are considered comments. Invalid lines are silently 
 ignored, unless a high enough verbosity level has been specified.
 
 A sample actkbd.conf is included in the actkbd distribution.
@@ -112,42 +116,42 @@ A sample actkbd.conf is included in the actkbd distribution.
 
 3.4. Running
 
-Run `actkbd --help' to see the various command line options. actkbd is normally
-able to auto-detect your keyboard device, therefore you do not need to specify
-it. For the most common case - a daemon with the default configuration file in
-/etc - the following command should suffice:
+Run `actkbd --help' to see the various command line options. actkbd is normally 
+able to auto-detect your keyboard device, therefore you do not need to specify 
+it. For the most common case - a daemon with the default configuration file in 
+$(sysconfdir) - the following command should suffice:
 
 # actkbd -D -q
 
-Note that sending the HUP signal (kill -HUP) to actkbd will cause it to reload
+Note that sending the HUP signal (kill -HUP) to actkbd will cause it to reload 
 its configuration file.
 
 
 4. Internals
 
-The most interesting/messy part of actkbd is the code that keeps track of which
-keys are pressed each moment. It uses a bitmask with one bit for each available
-key. When press/repeat events are received, the corresponding bit is set and it
-becomes unset when a release event is received for that key. To match key events
-with the corresponding actions, each valid configuration file entry has its key
-field transformed to a bitmask. After that, whenever a new event is received,
-the status bitmask is matched against all configuration entry bitmasks and the
+The most interesting/messy part of actkbd is the code that keeps track of which 
+keys are pressed each moment. It uses a bitmask with one bit for each available 
+key. When press/repeat events are received, the corresponding bit is set and it 
+becomes unset when a release event is received for that key. To match key events 
+with the corresponding actions, each valid configuration file entry has its key 
+field transformed to a bitmask. After that, whenever a new event is received, 
+the status bitmask is matched against all configuration entry bitmasks and the 
 first one to match (if any) is used and the corresponding command is executed.
 
-Please note that the platform specific code is contained in <platform>.c (.e.g.
-linux.c). This file implements a generic interface to keyboard events, hiding
-each system's intricacies from the rest of code. It is also the file that has
-to be written/ported to add support for a new platform.
+Please note that the platform specific code is contained in <platform>.c (.e.g. 
+linux.c). This file implements a generic interface to keyboard events, hiding 
+each system's intricacies from the rest of code. It is also the file that has to 
+be written/ported to add support for a new platform.
 
-For any additional details the best documentation is probalby the source code
+For any additional details the best documentation is probalby the source code 
 itself.
 
 
 5. License
 
-actkbd is released under the GNU General Public License version 2. The full
-text of the GPL is in the COPYING file that should be included in the actkbd
-distribution.
+actkbd is released under the GNU General Public License version 2. The full text 
+of the license can be found in the COPYING file that should be included in the 
+actkbd distribution.
 
 
 6. Authors

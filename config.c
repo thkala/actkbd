@@ -11,7 +11,9 @@
 #include "actkbd.h"
 
 
+#ifndef CONFIG
 #define CONFIG "/etc/actkbd.conf"
+#endif
 
 
 static int strtolower(char *str) {

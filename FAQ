@@ -22,10 +22,10 @@ I had a look at the following:
 	bloated with PM and other non-keyboard stuff.
 
 - esekeyd
-    pros: not X-based, executes external programs
+    pros: not X-based, executes external programs, keyboard detection
     cons: does not support key combinations
 
-    I used a self-modified (i.e. with limited combination support) esekeyd
+    I used a modified (i.e. with limited combination support) esekeyd
     for quite some time, until I decided to write my own daemon.
 
 - keyed
@@ -39,33 +39,33 @@ I had a look at the following:
 
 * What does the name mean ?
 
-Simply that actkbd ACTs on KeyBoarD events. Or maybe that it is an ACTing
+Simply that actkbd ACTs on KeyBoarD events. Or maybe that it is an ACTing 
 KeyBoard Daemon. Or...
 
 
 * Does it work ?
 
-I have performed some minimal testing and it seems to work fine. I will have
-to receive quite a lot of feedback before I mark it as stable, though.
+I have performed some minimal testing and it seems to work fine. I will have to 
+receive quite a lot of feedback before I mark it as stable, though.
 
 
 * How does it work ?
 
-To find out read the `Internals' section in the README. Then read the source
+To find out read the `Internals' section in the README. Then read the source 
 code itself for details.
 
 
 * Are release events useful ?
 
-Yes, I think so. A common example could be that of a battery monitor. You want
-it to appear when you press a key and then disappear (i.e. be terminated) when
+Yes, I think so. A common example could be that of a battery monitor. You want 
+it to appear when you press a key and then disappear (i.e. be terminated) when 
 you release it, without having to manually kill it each time.
 
 
 * I found a bug !
 
-Good! Now report it at <nyb@users.sourceforge.net>... or even better fix
-it and send a patch!
+Good! Now report it at <nyb@users.sourceforge.net>... or even better fix it and 
+send a patch!
 
 
 * How can I help ?
@@ -84,12 +84,12 @@ I don't like yours either.
 
 * Who wrote it ?
 
-Me, Theodoros Kalamatianos, a student at the department of Electric and Computer
-Engineering of the National Technical University of Athens. For purposes related
+Me, Theodoros Kalamatianos, a student at the department of Electric and Computer 
+Engineering of the National Technical University of Athens. For purposes related 
 to actkbd I may be reached at <nyb@users.sourceforge.net>.
 
 
 * Under what license is it released ?
 
-Naturally, the GNU General Public License. The full text of the GPL is included
+Naturally, the GNU General Public License. The full text of the GPL is included 
 in the actkbd tarball.

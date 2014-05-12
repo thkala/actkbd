@@ -1,6 +1,4 @@
-0.1.0:
-	* Initial public release
-	* Issue a warning (instead of error) on a missing configuration file
-	* Add pidfile support
-	* Minor bugfixes
+0.1.1:
 	* Minor documentation changes
+	* Make the default configuration file location
+	  follow the sysconfdir Makefile variable
