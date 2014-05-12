@@ -79,6 +79,9 @@ int get_key(int *key, int *type);
 /* Send an event to the input layer */
 int snd_key(int key, int type);
 
+/* Set a keyboard LED */
+int set_led(int led, int on);
+
 
 /* Key mask handling */
 int get_masksize();
@@ -129,6 +132,8 @@ struct _attr_t {
 #define ATTR_KEY		6
 #define ATTR_REL		7
 #define ATTR_REP		8
+#define ATTR_LEDON		9
+#define ATTR_LEDOFF		10
 
 
 /* The key_cmd struct */

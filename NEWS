@@ -1,5 +1,4 @@
-0.2.1:
-	* Added the `key()',`rel()' and `rep()' attributes that allow the
-	  injection of keyboard events to the system input layer.
-	* Added the `any' and `all' attributes to fine tune key matching.
+0.2.2:
+	* Added the `ledon()' and `ledoff()' attributes to control the
+	  keyboard LEDs.
 	* Documentation updates

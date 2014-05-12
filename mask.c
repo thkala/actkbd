@@ -197,17 +197,21 @@ int set_key_bit(int bit, int val) {
     return set_bit(mask, bit, val);
 }
 
+#if UNUSED
 int get_key_bit(int bit) {
     return get_bit(mask, bit);
 }
+#endif
 
 int cmp_key_mask(unsigned char *mask0, int any, int all) {
     return cmp_mask(mask, mask0, any, all);
 }
 
+#if UNUSED
 int lprint_key_mask_delim(char d) {
     return lprint_mask_delim(mask, d);
 }
+#endif
 
 int lprint_key_mask() {
     return lprint_mask(mask);

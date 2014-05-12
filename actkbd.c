@@ -370,6 +370,16 @@ int main(int argc, char **argv) {
 			str = "rep";
 			out_type = REP;
 			break;
+		    case ATTR_LEDON:
+			str = "ledon";
+			snprintf(opt, 32, "%i", (int)(attr->opt));
+			set_led((int)(attr->opt), 1);
+			break;
+		    case ATTR_LEDOFF:
+			str = "ledoff";
+			snprintf(opt, 32, "%i", (int)(attr->opt));
+			set_led((int)(attr->opt), 0);
+			break;
 		    default:
 			str = "unknown";
 			break;

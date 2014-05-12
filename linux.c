@@ -149,7 +149,7 @@ int get_key(int *key, int *type) {
     int ret;
 
     do {
-	ret = fread(&ev, sizeof (struct input_event), 1, dev);
+	ret = fread(&ev, sizeof(ev), 1, dev);
 	if (ret < 1) {
 	    lprintf("Error: failed to read event from %s: %s", device, strerror(errno));
 	    return READERR;
@@ -205,9 +205,27 @@ int snd_key(int key, int type) {
 	    return EINVAL;
     }
 
-    ret = fwrite(&ev, sizeof (struct input_event), 1, dev);
+    ret = fwrite(&ev, sizeof(ev), 1, dev);
     if (ret < 1) {
 	lprintf("Error: failed to send event to %s: %s", device, strerror(errno));
+	return WRITEERR;
+    }
+
+    return OK;
+}
+
+
+int set_led(int led, int on) {
+    struct input_event ev;
+    int ret;
+
+    ev.type = EV_LED;
+    ev.code = led;
+    ev.value = (on > 0);
+
+    ret = fwrite(&ev, sizeof(ev), 1, dev);
+    if (ret < 1) {
+	lprintf("Error: failed to set LED at %s: %s", device, strerror(errno));
 	return WRITEERR;
     }
 

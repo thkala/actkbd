@@ -1,3 +1,9 @@
+Tue Mar  7 19:48:04 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.2
+	* Added the `ledon()' and `ledoff()' attributes to control the
+	  keyboard LEDs.
+	* Documentation updates
+
 Tue Mar  7 16:33:33 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.1
 	* Added the `key()',`rel()' and `rep()' attributes that allow the

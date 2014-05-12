@@ -187,11 +187,11 @@ NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
 
 * `rcvrel': Restore proper reception of key release events.
 
-* `key(X)': Send a X key press event to the input layer of the system.
+* `key(X)': Send a key X press event to the input layer of the system.
 
-* `rel(X)': Send a X key release event to the input layer of the system.
+* `rel(X)': Send a key X release event to the input layer of the system.
 
-* `rep(X)': Send a X key repeat event to the input layer of the system.
+* `rep(X)': Send a key X repeat event to the input layer of the system.
 
 NOTE: An empty value for the `key()', `rel()' and `rep()' attributes instructs
 	actkbd to use the key value that triggered the current rule.
@@ -211,6 +211,22 @@ WARNING: The `key()', `rel()' and `rep()' attributes, if used without caution,
 NOTE: If none of the `any'/`all' attributes has been specified, actkbd requires
 	an exact match between the rule keys and the active key mask in order to
 	execute the entry. If both are specified, `all' supersedes `any'.
+
+* `ledon(X)': Switches on the keyboard LED X.
+
+* `ledoff(X)': Switches off the keyboard LED X.
+
+NOTE: actkbd does not check which LEDs actually exist on the keyboard, but this
+	does not cause any problems as invalid LED values are simply ignored.
+
+NOTE: Setting the LEDs this way is not permanent. Any operation that affects
+	a LED (e.g. pressing the Caps Lock key) can affect one or even all
+	LEDs, thus nullifying the operations from actkbd.
+
+NOTE: You will have to use some other way to find what LED codes your keyboard
+	supports. On Linux the /proc/bus/input/devices file can supply this
+	information: the LED= field is a bitwise mask of the present LEDs. For
+	example, if it's 7 (binary: 111), all first three LEDs are available.
 
 
 3.4. Running

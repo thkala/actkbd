@@ -140,16 +140,29 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	    type = ATTR_REP;
 	    event += 4;
 	    num = strsep(&event, "()");
+	} else if (strncmp(event, "ledon(", 6) == 0) {
+	    type = ATTR_LEDON;
+	    event += 6;
+	    num = strsep(&event, "()");
+	} else if (strncmp(event, "ledoff(", 7) == 0) {
+	    type = ATTR_LEDOFF;
+	    event += 7;
+	    num = strsep(&event, "()");
 	} else {
 	    lprintf("Warning: unknown attribute %s\n", event);
 	}
 
 	if (num != NULL) {
 	    errno = 0;
-	    if (strlen(num) > 0)
+	    if (strlen(num) > 0) {
 		opt = (void *)((int)strtol(num, (char **)NULL, 10));
-	    else
+	    } else {
 		opt = (void *)((int)(-1));
+	    }
+
+	    if (((int)opt < 0) &&
+		    ((type == ATTR_LEDON) || (type == ATTR_LEDOFF)))
+		errno = EINVAL;
 
 	    if (errno != 0) {
 		err = "invalid attribute argument";
@@ -290,6 +303,12 @@ static void print_attrs(key_cmd *cmd) {
 		break;
 	    case ATTR_REP:
 		snprintf(opt, 32, "rep(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_LEDON:
+		snprintf(opt, 32, "ledon(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_LEDOFF:
+		snprintf(opt, 32, "ledoff(%i)", (int)(attr->opt));
 		break;
 	    default:
 		str = "unknown";
