@@ -1,0 +1,33 @@
+* Find out what happens if the keyboard device suddenly disappears - I have
+  to find a USB keyboard to test this. Make sure we handle this gracefully.
+
+* Perform some testing on non-IA32 platforms, especially on 64-bit and
+  big-endian CPUs - some external feedback is welcome.
+
+* Check/Implement support for linux-2.4 kernels. I can't even remember whether
+  those had a proper event interface...
+
+* Implement the module subsystem. Modules to control sound mixers e.t.c could
+  be built.
+
+* Use select() to handle multiple keyboards, instead of just the first one,
+  and get a USB keyboard to test it.
+
+* Dynamically attach to new keyboards - the select() infrastrusture is a
+  prerequisite for this - can we do this without periodically reading the
+  /proc/bus/input/devices file ?
+
+* Per-keyboard configuration - this may never be implemented since it would
+  complicate the code. Perhaps a hotplug script could handle this better.
+
+* Support additional platforms. To do this, alternatives to linux.c must be
+  written and the build system must become smarter (autotools ?). I would
+  also need maintainers for any platform apart from Linux, since I do not
+  see myself installing another OS any time soon.
+
+* Find out if there are any good reasons (security ?) to replace the call
+  to system().
+
+* Add support for symbolic key names in the configuration file. Can we do
+  do this while still keeping the code relatively portable and without using
+  huge fixed keymaps ?

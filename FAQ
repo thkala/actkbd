@@ -1,0 +1,82 @@
+* Why yet another keyboard daemon ?
+
+Because I needed a daemon that:
+
+- is small and simple
+- is NOT X Window based, so that it's usable even from the console
+- can execute external programs
+- can handle key combinations
+
+
+* What about the other daemons
+
+I had a look at the following:
+
+- lineakd:
+    pros: modules
+    cons: X-based
+
+- pbbuttonsd:
+    pros: not X-based (IIRC)
+    cons: could not find how to execute external programs, Mac-centric,
+	bloated with PM stuff and other non-keyboard stuff.
+
+- esekeyd
+    pros: not X-based, executes external programs
+    cons: does not support key combinations
+
+    I used a self-modified (i.e. with limited combination support) esekeyd
+    for quite some time, until I decided to write my own daemon.
+
+- keyed
+    pros: not X-based, executes external programs
+    cons: alpha, with fork() issues (according to the author)
+
+- evkeyd
+    pros: not X-based
+    cons: no external program execution, no key combinations
+
+
+* Does it work ?
+
+I have performed some minimal testing and it seems to work fine. I will have
+to receive quite a lot of feedback before I mark it as stable, though.
+
+
+* How does it work ?
+
+To find out read the `Internals' section in the README. Then read the source
+code itself for details.
+
+
+* I found a bug !
+
+Good! Now report it to me at <nyb@users.sourceforge.net>... or even better fix
+it and send a patch!
+
+
+* How can I help ?
+
+- Test it!
+- Report bugs!
+- Ideas, suggestions e.t.c. are welcome. Patches even more :-D
+- Occasionally you may drop a line to say that it worked for you. Positive
+  feedback is just as important.
+
+
+* I don't like your coding style
+
+I don't like yours either.
+
+
+* Who wrote it ?
+
+Me, Theodoros Kalamatianos, a student at the department of Electric and Computer
+Engineering of the National Technical University of Athens. For purposes related
+to actkbd I may be reached at <nyb@users.sourceforge.net>.
+
+
+* Under what license is it released ?
+
+Naturally, the GNU General Public License. The full text of the GPL is included
+in the actkbd tarball.
