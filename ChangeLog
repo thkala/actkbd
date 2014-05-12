@@ -1,3 +1,10 @@
+Tue May  2 21:28:16 EEST 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.6
+	* Updated the copyright notices
+	* Various minor fixes
+	* Updated the ToDo list, dropping several items
+	* Minor documentation updates
+
 Mon Mar 13 23:38:59 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.5
 	* Added the `set()' and `unset()' attributes to manipulate the internal

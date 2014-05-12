@@ -1,3 +1,5 @@
+1. Items in the ToDo list:
+
 * Find out what happens if the keyboard device suddenly disappears - I have
   to find a USB keyboard to test this. Make sure we handle this gracefully -
   no a SIGSEGV is NOT graceful.
@@ -5,23 +7,10 @@
 * Perform some testing on non-IA32 platforms, especially on 64-bit and
   big-endian CPUs - some external feedback is welcome.
 
-* Check/Implement support for linux-2.4 kernels. I can't even remember whether
-  those had a proper event interface...
-
 * Implement the module subsystem. Modules to control sound mixers e.t.c. could
   be built.
   UPDATE: The attribute infrastructure introduced in actkbd-0.2.0 is the core
 	of the module subsystem. Now we are just missing the modules...
-
-* Use select() to handle multiple keyboards, instead of just the first one,
-  and get a USB keyboard to test it.
-
-* Dynamically attach to new keyboards - the select() infrastrusture is a
-  prerequisite for this - can we do this without periodically reading the
-  /proc/bus/input/devices file ? Perhaps, with some help from hotplug...
-
-* Per-keyboard configuration - this may never be implemented since it would
-  complicate the code. Perhaps a hotplug script could handle this better.
 
 * Support additional platforms. To do this, alternatives to linux.c must be
   written and the build system must become smarter (autotools ?). I would
@@ -42,3 +31,41 @@
   language...
 
 * Autotools ?
+
+* Research and update the documentation with information on how to couple actkbd
+  with the hotplug subsystem, so that multiple keyboards can be supported. Any
+  takers ?
+
+
+
+2. Features that will probably never be added:
+
+* Check/Implement support for linux-2.4 kernels. I can't even remember whether
+  those had a proper event interface...
+  RATIONALE: If someone still uses a linux-2.4 kernel, well, here's one more
+	reason to upgrade :-). linux-2.4 will probably not run on my development
+	system anyway...
+
+* Multiple keyboard support.
+  RATIONALE: After careful consideration, it was determined that using a single
+	daemon to handle multiple, possibly very different, keyboards is not a
+	very good idea. The one prominent category of people that regularly use
+	multiple keyboards, namely the laptop owners, will usually need totally
+	different configuration settings for each keyboard, as the external one
+	will have many more keys and might be missing others (the WLAN switch
+	comes to mind). It would be simpler and much more efficient to setup the
+	hotplug scripts to launch multiple actkbd instances, each with its own
+	configuration file.
+
+* Use select() to handle multiple keyboards, instead of just the first one,
+  and get a USB keyboard to test it.
+  RATIONALE: Multiple keyboard support will not be added at all, so...
+
+* Dynamically attach to new keyboards - the select() infrastrusture is a
+  prerequisite for this - can we do this without periodically reading the
+  /proc/bus/input/devices file ? Perhaps, with some help from hotplug...
+  RATIONALE: Multiple keyboard support will not be added at all, so...
+
+* Per-keyboard configuration - this may never be implemented since it would
+  complicate the code. Perhaps a hotplug script could handle this better.
+  RATIONALE: Multiple keyboard support will not be added at all, so...

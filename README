@@ -32,6 +32,11 @@ perform some common actions (e.g. eject the CD-ROM or change the volume) without
 having to call external commands. Currently, though, actkbd can only execute
 external commands, as the supported attributes only serve configuration purposes.
 
+Please keep in mind that the manual creation of a configuration file can be very
+complex, especially if some of the more advanced features are required. Unless
+you enjoy mind games, you might wish to stick to the more simple configuration
+rules...
+
 
 
 2. Platforms

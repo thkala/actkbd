@@ -1,7 +1,7 @@
 /*
  * actkbd - A keyboard shortcut daemon
  *
- * Copyright (c) 2005 Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+ * Copyright (c) 2005-2006 Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published by
@@ -249,7 +249,16 @@ int main(int argc, char **argv) {
     if (help)
 	return usage();
     if (version) {
-	lprintf("actkbd Version %s\n", VERSION);
+	lprintf(
+	    "actkbd Version %s\n\n"
+	    "Copyright (c) 2005-2006 Theodoros V. Kalamatianos <nyb@users.sourceforge.net>\n\n"
+	    "This program is free software; you can redistribute it and/or modify it\n"
+	    "under the terms of the GNU General Public License version 2 as published by\n"
+	    "the Free Software Foundation.\n\n"
+	    "This program is distributed in the hope that it will be useful, but WITHOUT\n"
+	    "ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n"
+	    "FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\n"
+	, VERSION);
 	return OK;
     }
     if (quiet && !detach) {
@@ -291,7 +300,7 @@ int main(int argc, char **argv) {
 	    case 0:
     		break;
 	    default:
-    		lprintf("%s: fork() error: %s", argv[0], strerror(errno));
+    		lprintf("%s: fork() error: %s\n", argv[0], strerror(errno));
     		return FORKERR;
 	}
 	lprintf("actkbd %s launched for %s\n", VERSION, device);

@@ -1,5 +1,5 @@
-0.2.5:
-	* Added the `set()' and `unset()' attributes to manipulate the internal
-	  state mask of actkbd
-	* Documentation updates
-	* Minor code clean-ups
+0.2.6:
+	* Updated the copyright notices
+	* Various minor fixes
+	* Updated the ToDo list, dropping several items
+	* Minor documentation updates
