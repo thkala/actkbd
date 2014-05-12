@@ -178,11 +178,12 @@ NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
 	attribute list is empty, an `exec' call is implied at the end of the
 	list. Always use `noexec' for entries with empty/invalid commands.
 
-* `ignrel': Ignore release events for the keys that are currently pressed. This
-	allows complex key combinations where the keys are pressed sequentially,
-	rather than simultaneously. When the key combination is completed, the
-	`allrel' and `rcvrel' attributes should be used to clear the key mask
-	and to resume the proper reception of release events.
+* `ignrel': When changing the internal state of actkbd, ignore release events
+	for the keys that are currently pressed. This allows more complex key
+	combinations where the shortcut keys are pressed sequentially, rather
+	than simultaneously. When the key combination is completed, the `allrel'
+	and `rcvrel' attributes should be used to clear the key mask and to
+	resume the proper reception of release events.
 
 * `allrel': Clear the pressed key mask. It is the equivalent of releasing all
 	pressed keys, but is not affected by the `ignrel' attribute.
@@ -194,9 +195,6 @@ NOTE: If none of the `noexec'/`exec' attributes has been specified, or if the
 * `rel(X)': Send a key X release event to the input layer of the system.
 
 * `rep(X)': Send a key X repeat event to the input layer of the system.
-
-NOTE: An empty value for the `key()', `rel()' and `rep()' attributes instructs
-	actkbd to use the key value that triggered the current rule.
 
 WARNING: Note that the careless use of the key event injection commands can make
 	your life really adventurous - or just difficult. For example injecting
@@ -211,6 +209,23 @@ WARNING: The `key()', `rel()' and `rep()' attributes, if used without caution,
 	seems that continuous event loops can cause actkbd to miss some events,
 	or even block the event interface, with various dire results. Use with
 	extreme caution.
+
+* `set(X)': Manipulate the internal actkbd state, by setting the key X status to
+	`pressed'.
+
+* `unset(X)': Manipulate the internal actkbd state, by setting the key X status
+	to `released'.
+
+NOTE: `set()' and `unset()' supersede the normal operations associated with the
+	received events, if they are in conflict.
+
+NOTE: By using `set()' and `unset()' with key values that are not producable by
+	your keyboard, but are still valid, you can create complex configuration
+	schemes by using those key values as status variables.
+
+NOTE: An empty value for the `key()', `rel()', `rep()', `set()' and `unset()'
+	attributes instructs actkbd to use the key value that triggered the
+	current rule.
 
 * `not': Indicates that the current entry will match when any key except for the
 	listed ones is received. This attribute can be used along with an empty

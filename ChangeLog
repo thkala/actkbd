@@ -1,3 +1,10 @@
+Mon Mar 13 23:38:59 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.5
+	* Added the `set()' and `unset()' attributes to manipulate the internal
+	  state mask of actkbd
+	* Documentation updates
+	* Minor code clean-ups
+
 Thu Mar  9 16:08:27 EET 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.4
 	* The event type field is now a bitmask, rather than a simple value,

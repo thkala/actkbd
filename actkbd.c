@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
     signal(SIGTERM, on_term);
 
     while (get_key(&key, &type) == OK) {
-	int exec_ok = 0;
+	int tmp, exec_ok = 0, norel = 0;
 
 	if ((type & (KEY | REP)) != 0)
 	    set_key_bit(key, 1);
@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
 	    attr = cmd->attrs;
 	    while (attr != NULL) {
 		char *str, opt[32] = { '\0' };
-		int out_type = INVALID, out_key = -1;
+		int out_type = INVALID;
 		switch (attr->type) {
 		    case ATTR_EXEC:
 			str = "exec";
@@ -370,6 +370,22 @@ int main(int argc, char **argv) {
 			str = "rep";
 			out_type = REP;
 			break;
+		    case ATTR_SET:
+			str = "set";
+			tmp = (int)(attr->opt);
+			if (tmp < 0)
+			    tmp = key;
+			if (tmp == key)
+			    norel = 1;
+			snprintf(opt, 32, "%i", tmp);
+			set_key_bit(tmp, 1);
+			break;
+		    case ATTR_UNSET:
+			str = "unset";
+			tmp = (((int)(attr->opt)) >= 0)?(int)(attr->opt):key;
+			snprintf(opt, 32, "%i", tmp);
+			set_key_bit(tmp, 0);
+			break;
 		    case ATTR_LEDON:
 			str = "ledon";
 			snprintf(opt, 32, "%i", (int)(attr->opt));
@@ -386,9 +402,9 @@ int main(int argc, char **argv) {
 		}
 
 		if (out_type != INVALID) {
-		    out_key = (((int)(attr->opt)) >= 0)?(int)(attr->opt):key;
-		    snprintf(opt, 32, "%i", out_key);
-		    snd_key(out_key, out_type);
+		    tmp = (((int)(attr->opt)) >= 0)?(int)(attr->opt):key;
+		    snprintf(opt, 32, "%i", tmp);
+		    snd_key(tmp, out_type);
 		}
 
 		if ((verbose > 0) || showexec)
@@ -404,7 +420,7 @@ int main(int argc, char **argv) {
 	    }
 	}
 
-	if ((type == REL) && ((!ignrel) || (get_ign_bit(key) == 0)))
+	if ((type == REL) && (!norel) && ((!ignrel) || (get_ign_bit(key) == 0)))
 	    set_key_bit(key, 0);
     }
 

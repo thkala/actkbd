@@ -138,6 +138,8 @@ struct _attr_t {
 #define ATTR_REP		8
 #define ATTR_LEDON		9
 #define ATTR_LEDOFF		10
+#define ATTR_SET		11
+#define ATTR_UNSET		12
 
 
 /* The key_cmd struct */

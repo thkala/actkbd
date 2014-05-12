@@ -140,28 +140,38 @@ static int proc_config(int lineno, char *line, key_cmd **cmd) {
 	} else if (strncmp(tmp, "key(", 4) == 0) {
 	    type = ATTR_KEY;
 	    tmp += 4;
-	    num = strsep(&tmp, "()");
+	    num = (void *)1;
 	} else if (strncmp(tmp, "rel(", 4) == 0) {
 	    type = ATTR_REL;
 	    tmp += 4;
-	    num = strsep(&tmp, "()");
+	    num = (void *)1;
 	} else if (strncmp(tmp, "rep(", 4) == 0) {
 	    type = ATTR_REP;
 	    tmp += 4;
-	    num = strsep(&tmp, "()");
+	    num = (void *)1;
+	} else if (strncmp(tmp, "set(", 4) == 0) {
+	    type = ATTR_SET;
+	    tmp += 4;
+	    num = (void *)1;
+	} else if (strncmp(tmp, "unset(", 6) == 0) {
+	    type = ATTR_UNSET;
+	    tmp += 6;
+	    num = (void *)1;
 	} else if (strncmp(tmp, "ledon(", 6) == 0) {
 	    type = ATTR_LEDON;
 	    tmp += 6;
-	    num = strsep(&tmp, "()");
+	    num = (void *)1;
 	} else if (strncmp(tmp, "ledoff(", 7) == 0) {
 	    type = ATTR_LEDOFF;
 	    tmp += 7;
-	    num = strsep(&tmp, "()");
+	    num = (void *)1;
 	} else {
 	    lprintf("Warning: unknown attribute %s\n", tmp);
 	}
 
-	if (num != NULL) {
+	if (num == (void *)1) {
+	    num = strsep(&tmp, "()");
+
 	    errno = 0;
 	    if (strlen(num) > 0) {
 		opt = (void *)((int)strtol(num, (char **)NULL, 10));
@@ -334,6 +344,12 @@ static void print_attrs(key_cmd *cmd) {
 		break;
 	    case ATTR_REP:
 		snprintf(opt, 32, "rep(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_SET:
+		snprintf(opt, 32, "set(%i)", (int)(attr->opt));
+		break;
+	    case ATTR_UNSET:
+		snprintf(opt, 32, "unset(%i)", (int)(attr->opt));
 		break;
 	    case ATTR_LEDON:
 		snprintf(opt, 32, "ledon(%i)", (int)(attr->opt));
