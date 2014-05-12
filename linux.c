@@ -11,7 +11,7 @@
 #include "actkbd.h"
 
 #include <linux/input.h>
-
+#include <regex.h>
 
 #define PROCFS "/proc/"
 #define HANDLERS "bus/input/handlers"
@@ -30,6 +30,8 @@ int init_dev() {
     FILE *fp = NULL;
     int ret;
     unsigned int u0, u1;
+    regex_t preg;
+    regmatch_t pmatch[4];
 
     maxkey = KEY_MAX;
 
@@ -59,16 +61,31 @@ int init_dev() {
 	lprintf("Error: could not open " PROCFS DEVICES ": %s\n", strerror(errno));
 	return HOSTFAIL;
     }
+
+    /* Compile the regular expression and scan for it */
+    regcomp(&preg, "^H: Handlers=(.* )?kbd (.* )?event([0-9]+)", REG_EXTENDED);
     do {
-	ret = fscanf(fp, "H: Handlers=kbd event%u", &u0);
-	fscanf(fp, "%*s\n");
+	char l[128] = "";
+	ret = fscanf(fp, "%127[^\n]%*c", l);
+	if (ret < 1)
+	    break;
+	ret = regexec(&preg, l, 4, pmatch, 0);
+	if (ret == 0) {
+	    l[pmatch[3].rm_eo] = '\0';
+	    ret = sscanf(l + pmatch[3].rm_so, "%u", &u0);
+	} else {
+	    ret = -1;
+	}
     } while ((!feof(fp)) && (ret < 1));
+    regfree(&preg);
+
     if (ret < 1) {
 	lprintf("Error: could not detect a usable keyboard device\n");
 	return HOSTFAIL;
     }
     if (verbose > 1)
 	lprintf("Detected a usable keyboard device (event%u)\n", u0);
+
     fclose(fp);
     sprintf(devnode, DEVNODE "%u", u0);
     device = devnode;

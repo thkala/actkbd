@@ -1,4 +1,2 @@
-0.1.1:
-	* Minor documentation changes
-	* Make the default configuration file location
-	  follow the sysconfdir Makefile variable
+0.1.2:
+	* Improve automatic keyboard detection
