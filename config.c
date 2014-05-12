@@ -181,8 +181,8 @@ int open_config() {
 
     fp = fopen(config, "r");
     if (fp == NULL) {
-	lprintf("Error: could not open the configuration file %s: %s\n", config, strerror(errno));
-	return CONFERR;
+	lprintf("Warning: could not open the configuration file %s: %s\n", config, strerror(errno));
+	return OK;
     }
     if (verbose > 1)
 	lprintf("Using configuration file %s\n", config);
@@ -218,6 +218,8 @@ int open_config() {
 	free(line);
 	++lineno;
     }
+
+    fclose(fp);
 
     return OK;
 }

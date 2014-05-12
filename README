@@ -6,6 +6,7 @@ Contents:
 
     1. Introduction
     2. Platforms
+	2.1. Platform-specific information
     3. Setup
 	3.1. Compilation
 	3.2. Installation
@@ -44,6 +45,16 @@ The following platforms will probably never be supported:
 * BeOS - unless someone can resurrect it
 
 
+2.1. Platform-specific information
+
+* Linux 2.6.x
+
+To run actkbd under Linux 2.6.x you need to have the event interface available.
+In most cases, loading the `evdev' kernel module will be sufficient:
+
+# modprobe evdev
+
+
 
 3. Setup
 
@@ -62,10 +73,15 @@ DEBUG to "-g" would probably do.
 
 First verify with `make -n install' the installation paths. By default, the
 installation prefix is /usr/local and the actkbd daemon binary is installed in
-$(prefix)/sbin. You can set the prefix and sbindir variables to override these
-defaults. Then run `make install' as root to perform the actual installation:
+$(prefix)/sbin. A configuration placeholder is placed in /etc. You can set the
+prefix, sbindir and sysconfdir variables to override these defaults. Then run
+`make install' as root to perform the actual installation:
 
 # make install
+
+Bear in mind that currently the location of the configuration file must be
+explicitly specified (-c) in the actkbd command line options if the default
+(/etc/actkbd.conf) location is not valid.
 
 
 3.3. Configuration
@@ -76,7 +92,8 @@ file with each line being an entry. A proper entry has the following format:
 <keys>:<event type>:<command module>:<command>
 
 The <keys> field is a series of numeric keycodes, separated by the `+'
-character. `actkbd -n -s' can be used to find out any keycodes you need.
+character. `actkbd -n -s' can be used to find out any keycodes you need, as
+it will report all key presses without executing any commands.
 
 The <event type> string field is one of `key' (key press event), `rep' (key
 repeat event) or `rel' (key release event). If empty, it defaults to `key'.
@@ -90,6 +107,8 @@ to the command, so that /bin/sh will execute it in the background.
 Lines starting with '#' are considered comments. Invalid lines are silently
 ignored, unless a high enough verbosity level has been specified.
 
+A sample actkbd.conf is included in the actkbd distribution.
+
 
 3.4. Running
 
@@ -100,12 +119,13 @@ it. For the most common case - a daemon with the default configuration file in
 
 # actkbd -D -q
 
-Note that sending HUP to actkbd will cause it to reload the configuration file.
+Note that sending the HUP signal (kill -HUP) to actkbd will cause it to reload
+its configuration file.
 
 
 4. Internals
 
-The most interesting/messy part of evkey is the code that keeps track of which
+The most interesting/messy part of actkbd is the code that keeps track of which
 keys are pressed each moment. It uses a bitmask with one bit for each available
 key. When press/repeat events are received, the corresponding bit is set and it
 becomes unset when a release event is received for that key. To match key events

@@ -32,6 +32,9 @@ char *device = NULL;
 /* Configuration file name */
 char *config = NULL;
 
+/* PID file name */
+char *pidfile = NULL;
+
 
 static int usage() {
     lprintf(
@@ -43,6 +46,7 @@ static int usage() {
 	"        -d, --device <device>   Specify the device to use\n"
 	"        -h, --help              Show this help text\n"
 	"        -n, --noexec            Do not execute any commands\n"
+	"        -p, --pidfile <file>    Use a file to store the PID\n"
 	"        -q, --quiet             Suppress all console messages\n"
 	"        -v, --verbose [level]   Specify the verbosity level (0-9)\n"
 	"        -V, --version           Show version information\n"
@@ -94,9 +98,33 @@ void on_term(int signum) {
 
     closelog();
 
+    if (pidfile != NULL)
+	unlink(pidfile);
+
     exit(OK);
 
     return;
+}
+
+
+/* PID file creation */
+static int write_pid() {
+    FILE *fp;
+
+    fp = fopen(pidfile, "w");
+    if (fp == NULL) {
+	lprintf("Error: could not write the PID file %s: %s\n", pidfile, strerror(errno));
+	return PIDERR;
+    }
+
+    fprintf(fp, "%i\n", getpid());
+
+    if (verbose > 2)
+	lprintf("Wrote PID file %s\n", pidfile);
+
+    fclose(fp);
+
+    return OK;
 }
 
 
@@ -113,6 +141,7 @@ int main(int argc, char **argv) {
 	{ "device", required_argument, 0, 'd' },
 	{ "help", no_argument, 0, 'h' },
 	{ "noexec", no_argument, 0, 'n' },
+	{ "pidfile", required_argument, 0, 'p' },
 	{ "quiet", no_argument, 0, 'q' },
 	{ "verbose", optional_argument, 0, 'v' },
 	{ "version", no_argument, 0, 'V' },
@@ -125,7 +154,7 @@ int main(int argc, char **argv) {
     while (1) {
 	int c, option_index = 0;
 
-	c = getopt_long (argc, argv, "c:Dd:hqnv::Vxsl", options, &option_index);
+	c = getopt_long (argc, argv, "c:Dd:hp:qnv::Vxsl", options, &option_index);
 	if (c == -1)
 	    break;
 
@@ -154,6 +183,14 @@ int main(int argc, char **argv) {
 		break;
 	    case 'n':
 		noexec = 1;
+		break;
+	    case 'p':
+		if (optarg) {
+		    pidfile = strdup(optarg);
+		} else {
+		    usage();
+		    return USAGE;
+		}
 		break;
 	    case 'q':
 		quiet = 1;
@@ -234,6 +271,10 @@ int main(int argc, char **argv) {
 	}
 	lprintf("actkbd %s launched for %s\n", VERSION, device);
     }
+
+    if (pidfile != NULL)
+	if ((ret = write_pid()) != OK)
+	    return ret;
 
     /* Setup the signal handlers */
     signal(SIGHUP, on_hup);

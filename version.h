@@ -8,4 +8,4 @@
  * the Free Software Foundation.
  */
 
-#define VERSION "0.0.1"
+#define VERSION "0.1.0"

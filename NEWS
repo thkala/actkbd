@@ -1,2 +1,6 @@
-0.0.1:
-	* Initial testing release
+0.1.0:
+	* Initial public release
+	* Issue a warning (instead of error) on a missing configuration file
+	* Add pidfile support
+	* Minor bugfixes
+	* Minor documentation changes

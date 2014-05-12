@@ -8,7 +8,7 @@ Because I needed a daemon that:
 - can handle key combinations
 
 
-* What about the other daemons
+* What about the other daemons ?
 
 I had a look at the following:
 
@@ -19,7 +19,7 @@ I had a look at the following:
 - pbbuttonsd:
     pros: not X-based (IIRC)
     cons: could not find how to execute external programs, Mac-centric,
-	bloated with PM stuff and other non-keyboard stuff.
+	bloated with PM and other non-keyboard stuff.
 
 - esekeyd
     pros: not X-based, executes external programs
@@ -30,11 +30,17 @@ I had a look at the following:
 
 - keyed
     pros: not X-based, executes external programs
-    cons: alpha, with fork() issues (according to the author)
+    cons: no repeat/release event support, no device detection
 
 - evkeyd
     pros: not X-based
     cons: no external program execution, no key combinations
+
+
+* What does the name mean ?
+
+Simply that actkbd ACTs on KeyBoarD events. Or maybe that it is an ACTing
+KeyBoard Daemon. Or...
 
 
 * Does it work ?
@@ -49,17 +55,24 @@ To find out read the `Internals' section in the README. Then read the source
 code itself for details.
 
 
+* Are release events useful ?
+
+Yes, I think so. A common example could be that of a battery monitor. You want
+it to appear when you press a key and then disappear (i.e. be terminated) when
+you release it, without having to manually kill it each time.
+
+
 * I found a bug !
 
-Good! Now report it to me at <nyb@users.sourceforge.net>... or even better fix
+Good! Now report it at <nyb@users.sourceforge.net>... or even better fix
 it and send a patch!
 
 
 * How can I help ?
 
-- Test it!
-- Report bugs!
-- Ideas, suggestions e.t.c. are welcome. Patches even more :-D
+- Test it.
+- Report any bugs.
+- Ideas, suggestions e.t.c. are welcome. Patches even more!
 - Occasionally you may drop a line to say that it worked for you. Positive
   feedback is just as important.
 

@@ -1,5 +1,6 @@
 * Find out what happens if the keyboard device suddenly disappears - I have
-  to find a USB keyboard to test this. Make sure we handle this gracefully.
+  to find a USB keyboard to test this. Make sure we handle this gracefully -
+  no a SIGSEGV is NOT graceful.
 
 * Perform some testing on non-IA32 platforms, especially on 64-bit and
   big-endian CPUs - some external feedback is welcome.
@@ -7,7 +8,7 @@
 * Check/Implement support for linux-2.4 kernels. I can't even remember whether
   those had a proper event interface...
 
-* Implement the module subsystem. Modules to control sound mixers e.t.c could
+* Implement the module subsystem. Modules to control sound mixers e.t.c. could
   be built.
 
 * Use select() to handle multiple keyboards, instead of just the first one,
@@ -31,3 +32,7 @@
 * Add support for symbolic key names in the configuration file. Can we do
   do this while still keeping the code relatively portable and without using
   huge fixed keymaps ?
+
+* Create manual pages: actkbd.1, actkbd.conf.5
+
+* Make CONFIG follow the sysconfdir Makefile variable
