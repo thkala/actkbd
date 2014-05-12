@@ -61,11 +61,24 @@ In most cases, loading the `evdev' kernel module will be sufficient:
 
 # modprobe evdev
 
-In most Linux systems the device nodes to use are named /dev/input/eventX,
-where X is a decimal unsigned number, e.g. /dev/input/event0. If the /proc
-filesystem is mounted and accessible, actkbd should be able to detect a
-usable keyboard device. You should not need to manually specify one, unless
-there are multiple keyboards present.
+On Linux it is recommended that actkbd is launched using udev rules. This allows
+the administrator to use a different configuration for each keyboard, as long as
+udev can tell the devices apart. This method is far more reliable and flexible
+than using an init script, as it allows for proper support of hotplug events and
+removes the probability of the auto-detection code getting confused and causing
+problems.
+
+In most Linux systems the device nodes to use are named /dev/input/eventX, where
+X is a decimal unsigned number, e.g. /dev/input/event0. If the /proc filesystem
+is mounted and accessible, actkbd should be able to detect a usable keyboard
+device. You should not need to manually specify one, unless there are multiple
+keyboards present.
+
+Update: On newer kernels several special buttons (like the Power switch) may
+appear as input devices as well. There is no way for the auto-detection code to
+tell them apart and it is quite possible that the actual keyboard will not be
+the one actkbd will select. Using udev to start actkbd is the best way to avoid
+this problem.
 
 
 

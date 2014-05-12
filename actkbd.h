@@ -25,8 +25,6 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "version.h"
-
 
 #define UNUSED 0
 

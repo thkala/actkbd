@@ -1,9 +1,5 @@
 1. Items in the ToDo list:
 
-* Find out what happens if the keyboard device suddenly disappears - I have
-  to find a USB keyboard to test this. Make sure we handle this gracefully -
-  no a SIGSEGV is NOT graceful.
-
 * Perform some testing on non-IA32 platforms, especially on 64-bit and
   big-endian CPUs - some external feedback is welcome.
 
@@ -32,13 +28,24 @@
 
 * Autotools ?
 
+
+
+2. Completed
+
 * Research and update the documentation with information on how to couple actkbd
   with the hotplug subsystem, so that multiple keyboards can be supported. Any
   takers ?
+  UPDATE: A sample udev file is now provided. Pretty simple, actually...
+
+* Find out what happens if the keyboard device suddenly disappears - I have
+  to find a USB keyboard to test this. Make sure we handle this gracefully -
+  no a SIGSEGV is NOT graceful.
+  UPDATE: actkbd acts as it should. Users using hotplugged devices can just
+	ignore the error message when they remove the keyboard.
 
 
 
-2. Features that will probably never be added:
+3. Features that will probably never be added:
 
 * Check/Implement support for linux-2.4 kernels. I can't even remember whether
   those had a proper event interface...
@@ -56,6 +63,8 @@
 	comes to mind). It would be simpler and much more efficient to setup the
 	hotplug scripts to launch multiple actkbd instances, each with its own
 	configuration file.
+  UPDATE: There is now a sample udev rule file that can be adapted for multiple
+	keyboards.
 
 * Use select() to handle multiple keyboards, instead of just the first one,
   and get a USB keyboard to test it.

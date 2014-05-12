@@ -12,8 +12,14 @@ prefix := /usr/local
 sbindir := $(prefix)/sbin
 sysconfdir := /etc
 
+# Yes, I am lazy...
+VER := $(shell head -n 1 NEWS | cut -d : -f 1)
+
+
+
 DEBUG :=
 CFLAGS := -O2 -Wall $(DEBUG)
+CPPFLAGS := -DVERSION=\"$(VER)\" -DCONFIG=\"$(sysconfdir)/actkbd.conf\"
 
 
 
@@ -25,11 +31,8 @@ actkbd.o : actkbd.h
 mask.o : actkbd.h
 
 config.o : actkbd.h config.c
-	$(CC) $(CFLAGS)	-c -o config.o config.c -DCONFIG=\"$(sysconfdir)/actkbd.conf\"
 
 linux.o : actkbd.h
-
-actkbd.h: version.h
 
 install: all
 	install -D -m755 actkbd $(sbindir)/actkbd

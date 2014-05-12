@@ -65,6 +65,7 @@ int init_dev() {
     }
 
     /* Compile the regular expression and scan for it */
+    ret = -1;
     regcomp(&preg, "^H: Handlers=(.* )?kbd (.* )?event([0-9]+)", REG_EXTENDED);
     do {
 	char l[128] = "";

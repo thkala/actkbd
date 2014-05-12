@@ -1,3 +1,15 @@
+Fri Jul  6 00:25:10 EEST 2007 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
+	* Release 0.2.8
+	* Fixed the auto-detection code so that it fails with an error when no
+	  input devices are present at all, rather than letting actkbd attempt
+	  to use /dev/input/event0 and fail with some misleading error message
+	  (reported by Jerome Borme).
+	* Added a sample rule file for udev
+	* Note that a udev rule is the recommended way to launch actkbd on Linux
+	* Remove version.h - the version string is automatically set in the
+	  Makefile
+	* Documentation updates
+
 Sun Aug 20 14:06:59 EEST 2006 - Theodoros V. Kalamatianos <nyb@users.sourceforge.net>
 	* Release 0.2.7
 	* Fixed a bug in the keyboard autodetection code, where the automatic

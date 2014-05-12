@@ -1,0 +1,22 @@
+# udev rules for keyboards
+ACTION=="add", SUBSYSTEM=="input", KERNEL=="event[0-9]*", GOTO="_INPUT_"
+GOTO="_END_"
+
+
+LABEL="_INPUT_"
+
+# AT keyboard
+DRIVERS=="atkbd", ENV{__CFG}="/etc/actkbd/actkbd.atkbd.conf", GOTO="_KBD_"
+
+GOTO="_END_"
+
+
+# Keyboards
+LABEL="_KBD_"
+
+# Launch actkbd
+RUN+="/usr/sbin/actkbd -q -D -c %E{__CFG}"
+
+
+# End
+LABEL="_END_"
