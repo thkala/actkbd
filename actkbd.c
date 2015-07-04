@@ -51,6 +51,7 @@ static int usage() {
 	"        -D, --daemon            Launch in daemon mode\n"
 	"        -d, --device <device>   Specify the device to use\n"
 	"        -h, --help              Show this help text\n"
+	"        -g, --grab              Start with device grabbed\n"
 	"        -n, --noexec            Do not execute any commands\n"
 	"        -p, --pidfile <file>    Use a file to store the PID\n"
 	"        -q, --quiet             Suppress all console messages\n"
@@ -155,13 +156,14 @@ int main(int argc, char **argv) {
     key_cmd *cmd;
 
     /* Options */
-    int help = 0, noexec = 0, version = 0, showexec = 0, showkey = 0;
+    int grab = 0, help = 0, noexec = 0, version = 0, showexec = 0, showkey = 0;
 
     struct option options[] = {
 	{ "config", required_argument, 0, 'c' },
 	{ "daemon", no_argument, 0, 'D' },
 	{ "device", required_argument, 0, 'd' },
 	{ "help", no_argument, 0, 'h' },
+	{ "grab", no_argument, 0, 'g' },
 	{ "noexec", no_argument, 0, 'n' },
 	{ "pidfile", required_argument, 0, 'p' },
 	{ "quiet", no_argument, 0, 'q' },
@@ -176,7 +178,7 @@ int main(int argc, char **argv) {
     while (1) {
 	int c, option_index = 0;
 
-	c = getopt_long (argc, argv, "c:Dd:hp:qnv::Vxsl", options, &option_index);
+	c = getopt_long (argc, argv, "c:Dd:ghp:qnv::Vxsl", options, &option_index);
 	if (c == -1)
 	    break;
 
@@ -203,7 +205,10 @@ int main(int argc, char **argv) {
 	    case 'h':
 		help = 1;
 		break;
-	    case 'n':
+            case 'g':    
+                grab = 1;
+                break;   
+            case 'n':
 		noexec = 1;
 		break;
 	    case 'p':
@@ -289,6 +294,9 @@ int main(int argc, char **argv) {
 
     if ((ret = open_dev()) != OK)
 	return ret;
+
+    if (grab)
+        grab_dev();
 
     /* Verbosity levels over 2 make showkey redundant */
     if (verbose > 2)
