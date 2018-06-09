@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
 	showkey = 0;
 
     if (detach) {
-	switch (daemon(0, 0))
+	switch (daemon(0, 1))
 	{
 	    case 0:
     		break;
