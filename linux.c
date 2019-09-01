@@ -124,7 +124,7 @@ int grab_dev() {
 	grabbed = 1;
     else
 	lprintf("Error: could not grab %s: %s\n", device, strerror(errno));
-    
+
     return ret;
 }
 
@@ -140,12 +140,12 @@ int ungrab_dev() {
 	grabbed = 0;
     else
 	lprintf("Error: could not ungrab %s: %s\n", device, strerror(errno));
-	
+
     return ret;
 }
 
 
-int get_key(int *key, int *type) {
+int get_key(int *key, int *type, int *value, struct timeval *time) {
     struct input_event ev;
     int ret;
 
@@ -158,7 +158,8 @@ int get_key(int *key, int *type) {
     } while (ev.type != EV_KEY);
 
     *key = ev.code;
-
+    *time = ev.time;
+    *value = ev.value;
     switch (ev.value) {
 	case 0:
 	    *type = REL;

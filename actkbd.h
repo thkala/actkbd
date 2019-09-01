@@ -23,6 +23,7 @@
 #include <getopt.h>
 #include <syslog.h>
 #include <signal.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 
@@ -60,6 +61,11 @@ extern char *config;
 /* Logging function */
 int lprintf(const char *fmt, ...);
 
+/* Key printing function */
+void printkeys(struct timeval time, int key, int value);
+
+/* Formatted string concatenation function */
+void strfcat(char *src, char *fmt, ...);
 /* Device initialisation */
 int init_dev();
 
@@ -76,7 +82,7 @@ int grab_dev();
 int ungrab_dev();
 
 /* Keyboard event receiver function */
-int get_key(int *key, int *type);
+int get_key(int *key, int *type, int *value, struct timeval *time);
 
 /* Send an event to the input layer */
 int snd_key(int key, int type);
