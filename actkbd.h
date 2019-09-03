@@ -23,12 +23,16 @@
 #include <getopt.h>
 #include <syslog.h>
 #include <signal.h>
+#include <poll.h>
+#include <fcntl.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
 
 #define UNUSED 0
 
+/* Convert macro name into string */
+#define MACSTR(tok)	#tok
 
 /* Event types */
 #define INVALID		0
@@ -48,6 +52,9 @@ extern int verbose;
 /* Maximum number of keys */
 extern int maxkey;
 
+/* Unix util mode */
+extern int showkey;
+
 /* Device grab state */
 extern int grabbed;
 
@@ -66,6 +73,7 @@ void printkeys(struct timeval time, int key, int value);
 
 /* Formatted string concatenation function */
 void strfcat(char *src, char *fmt, ...);
+
 /* Device initialisation */
 int init_dev();
 
@@ -82,7 +90,7 @@ int grab_dev();
 int ungrab_dev();
 
 /* Keyboard event receiver function */
-int get_key(int *key, int *type, int *value, struct timeval *time);
+int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll);
 
 /* Send an event to the input layer */
 int snd_key(int key, int type);
@@ -90,6 +98,8 @@ int snd_key(int key, int type);
 /* Set a keyboard LED */
 int set_led(int led, int on);
 
+/* Convert keycode value, to a string with the keycodes name. */
+const char *keycodetostr(int type, int code, int numeric);
 
 /* Key mask handling */
 int get_masksize();

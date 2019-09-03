@@ -15,6 +15,7 @@
 
 #include <linux/input.h>
 
+#define test_bit(bit, array) (array[bit / 8] & (1 << (bit % 8)))
 #define PROCFS "/proc/"
 #define HANDLERS "bus/input/handlers"
 #define DEVICES "bus/input/devices"
@@ -66,7 +67,7 @@ int init_dev() {
 
     /* Compile the regular expression and scan for it */
     ret = -1;
-    regcomp(&preg, "^H: Handlers=(.* )?kbd (.* )?event([0-9]+)", REG_EXTENDED);
+    regcomp(&preg, "^H: Handlers=(.* )?kbd (.* )?event([0-9]+)? leds", REG_EXTENDED);
     do {
 	char l[128] = "";
 	void *str = fgets(l, 128, fp);
@@ -145,43 +146,80 @@ int ungrab_dev() {
 }
 
 
-int get_key(int *key, int *type, int *value, struct timeval *time) {
+int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll ) {
     struct input_event ev;
-    int ret;
+    int ret, ticks = 0, keydown = 0;
 
-    do {
-	ret = fread(&ev, sizeof(ev), 1, dev);
-	if (ret < 1) {
-	    lprintf("Error: failed to read event from %s: %s", device, strerror(errno));
-	    return READERR;
+    int fd = open(device, O_RDONLY);
+    if (fd == -1) {
+        printf("Error in opening device, %s", device);
+	return -1;
+    }
+    /* Poll for keypresses */
+    if(poll) {
+	if (!ticks)
+	    printf("Tickrate: %i\n", tickrate);
+	while (1) {
+	    printf("%i ", ticks++);
+	    u_int8_t key_b[KEY_MAX/8 + 1];
+	    memset(key_b, 0, sizeof(key_b));
+	    ioctl(fd, EVIOCGKEY(sizeof(key_b)), key_b);
+	    int keycount = 0;
+	    for (int yalv = 0; yalv < KEY_MAX; yalv++) {
+	        if (test_bit(yalv, key_b)) {
+	            ++keycount;
+	            /* the bit is set in the key state */
+	            if (keycount > 1)
+	        	printf("+%s", keycodetostr(EV_KEY, yalv, 0));
+	            else if (keycount == 1) {
+	        	printf("%s", keycodetostr(EV_KEY, yalv, 0));
+	            }
+	        }
+		keydown = keycount ? 1 : 0;
+	    }
+	    if (!keydown)
+		printf ("KEY_NONE %i", keydown);
+	    else
+		printf(" %i", keydown);
+	    printf("\n");
+	    fflush(stdout);
+	    float tickdely = (float)1/tickrate;
+	    usleep((useconds_t)(tickdely*1000000));
 	}
-    } while (ev.type != EV_KEY);
+    /* Wait for an input event */
+    } else {
+        do {
+	    ret = fread(&ev, sizeof(ev), 1, dev);
+	    if (ret < 1) {
+		lprintf("Error: failed to read event from %s: %s", device, strerror(errno));
+		return READERR;
+	    }
+	} while (ev.type != EV_KEY);
+	*key = ev.code;
+	*time = ev.time;
+	*value = ev.value;
+	switch (ev.value) {
+	    case 0:
+		*type = REL;
+		break;
+	    case 1:
+		*type = KEY;
+		break;
+	    case 2:
+		*type = REP;
+		break;
+	    default:
+		*type = KEY;
+	}
 
-    *key = ev.code;
-    *time = ev.time;
-    *value = ev.value;
-    switch (ev.value) {
-	case 0:
-	    *type = REL;
-	    break;
-	case 1:
-	    *type = KEY;
-	    break;
-	case 2:
-	    *type = REP;
-	    break;
-	default:
+	if (*key > KEY_MAX)
 	    *type = INVALID;
+
+	if (*type == INVALID) {
+            lprintf("Error: invalid event read from %s: code = %u, value = %u", device, ev.code, ev.value);
+	    return EVERR;
+	}
     }
-
-    if (*key > KEY_MAX)
-	*type = INVALID;
-
-    if (*type == INVALID) {
-        lprintf("Error: invalid event read from %s: code = %u, value = %u", device, ev.code, ev.value);
-	return EVERR;
-    }
-
     return OK;
 }
 

@@ -20,6 +20,12 @@ int detach = 0;
 /* Unix util mode */
 int showkey = 0;
 
+/* Keyboard polling mode */
+int kpoll = 0;
+
+/* Tickrate for polling mode */
+int tickrate = 60;
+
 /* Console message suppression */
 int quiet = 0;
 
@@ -55,12 +61,16 @@ static int usage() {
 	"	 -d, --device <device>	 Specify the device to use\n"
 	"	 -h, --help		 Show this help text\n"
 	"	 -n, --noexec		 Do not execute any commands\n"
+	"	 -P, --poll		 Enable keyboard polling mode.\n"
 	"	 -p, --pidfile <file>	 Use a file to store the PID\n"
 	"	 -q, --quiet		 Suppress all console messages\n"
 	"	 -v[level]\n"
 	"	 --verbose=[level]	 Specify the verbosity level (0-9)\n"
 	"	 -V, --version		 Show version information\n"
 	"	 -x, --showexec		 Report executed commands\n"
+	"	 -t[delay]\n"
+	"	 --tickrate=[delay]	 Set tickrate\n"
+	"				 (in ticks per second) for polling mode.\n"
 	"	 -s, --showkey		 Output key presses to stdout\n"
 	"				 (Output is designed to\n"
 	"				  be easily parsable.\n"
@@ -174,11 +184,13 @@ int main(int argc, char **argv) {
 	{ "device", required_argument, 0, 'd' },
 	{ "help", no_argument, 0, 'h' },
 	{ "noexec", no_argument, 0, 'n' },
+	{ "poll", no_argument, 0, 'P' },
 	{ "pidfile", required_argument, 0, 'p' },
 	{ "quiet", no_argument, 0, 'q' },
 	{ "verbose", optional_argument, 0, 'v' },
 	{ "version", no_argument, 0, 'V' },
 	{ "showexec", no_argument, 0, 'x' },
+	{ "tickrate", optional_argument, 0, 't' },
 	{ "showkey", no_argument, 0, 's' },
 	{ "syslog", no_argument, 0, 'l' },
 	{ 0, 0, 0, 0 }
@@ -187,7 +199,7 @@ int main(int argc, char **argv) {
     while (1) {
 	int c, option_index = 0;
 
-	c = getopt_long (argc, argv, "c:Dd:hp:qnv::Vxsl", options, &option_index);
+	c = getopt_long (argc, argv, "c:Dd:hPp:qnt::v::Vxsl", options, &option_index);
 	if (c == -1)
 	    break;
 
@@ -217,6 +229,9 @@ int main(int argc, char **argv) {
 	    case 'n':
 		noexec = 1;
 		break;
+	    case 'P':
+		kpoll = 1;
+		break;
 	    case 'p':
 		if (optarg) {
 		    pidfile = strdup(optarg);
@@ -245,6 +260,15 @@ int main(int argc, char **argv) {
 	    case 'x':
 		showexec = 1;
 		break;
+	    case 't':
+		if (optarg) {
+		    tickrate = atoi(optarg);
+		    if (tickrate <= -1)
+			tickrate = 0;
+		} else {
+		    tickrate = 60;
+		}
+
 	    case 's':
 		detach = 0;
 		noexec = 1;
@@ -303,10 +327,6 @@ int main(int argc, char **argv) {
     if ((ret = open_dev()) != OK)
 	return ret;
 
-    /* Verbosity levels over 2 make showkey redundant */
-    if (verbose > 2)
-	showkey = 0;
-
     if (detach) {
 	switch (daemon(0, 0))
 	{
@@ -327,18 +347,13 @@ int main(int argc, char **argv) {
     signal(SIGHUP, on_hup);
     signal(SIGTERM, on_term);
 
-    while (get_key(&key, &type, &value, &time) == OK) {
+    while (get_key(&key, &type, &value, &time, tickrate, kpoll) == OK) {
 	int tmp, exec_ok = 0, norel = 0;
 
 	if ((type & (KEY | REP)) != 0)
 	    set_key_bit(key, 1);
 
-	/*if (verbose > 2) {
-	    lprintf("Event: ");
-	    lprint_key_mask();
-	    lprintf(":%s\n", (type == KEY)?"key":((type == REP)?"rep":"rel"));
-	}*/
-	if (showkey || verbose > 2) {
+	if (showkey) {
 	    printkeys(time, key, value);
 	}
 

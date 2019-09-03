@@ -25,7 +25,7 @@ CPPFLAGS := -DVERSION=\"$(VER)\" -DCONFIG=\"$(sysconfdir)/actkbd.conf\"
 
 all: actkbd
 
-actkbd: actkbd.o mask.o config.o linux.o
+actkbd: actkbd.o mask.o config.o linux.o inputtables.o
 
 actkbd.o : actkbd.h
 mask.o : actkbd.h
