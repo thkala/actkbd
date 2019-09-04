@@ -480,10 +480,23 @@ int lprintf(const char *fmt, ...) {
 
 /* Key printing function */
 void printkeys(struct timeval time, int key, int value) {
+    int printable = 0, plus = 0, gbg = 0, nums = 0;
     char *keys = malloc(sizeof(char)*2048 + 1);
-    print_key_mask(keys);
-    printf("%lu.%06lu %s %i\n", time.tv_sec, time.tv_usec, keys, value);
-    fflush(stdout);
+    print_key_mask(keys, 1);
+    for (int i = 0; i < strlen(keys); ++i) {
+	if (isdigit(keys[i]))
+	    ++nums;
+	else if (keys[i] == '+')
+	    plus = 1;
+	else
+	    gbg = 1;
+
+    }
+    printable = ((nums || plus) && !gbg) ? 1 : 0;
+    if(printable) {
+	printf("%lu.%06lu %s %i\n", time.tv_sec, time.tv_usec, keys, value);
+	fflush(stdout);
+    }
     free(keys);
 }
 
@@ -491,7 +504,6 @@ void printkeys(struct timeval time, int key, int value) {
 void strfcat(char *src, char *fmt, ...) {
     char buf[2048];
     va_list args;
-
     va_start(args,fmt);
     vsprintf(buf, fmt, args);
     va_end(args);

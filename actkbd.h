@@ -99,7 +99,7 @@ int snd_key(int key, int type);
 int set_led(int led, int on);
 
 /* Convert keycode value, to a string with the keycodes name. */
-const char *keycodetostr(int type, int code, int numeric);
+extern const char *keycodetostr(int type, int code, int numeric);
 
 /* Key mask handling */
 int get_masksize();
@@ -115,8 +115,10 @@ void clear_key_mask();
 int set_key_bit(int bit, int val);
 int get_key_bit(int bit);
 int cmp_key_mask(unsigned char *mask0, unsigned int attr);
-int lprint_key_mask_delim(char c);
+int lprint_key_mask_delim();
+int sprint_key_mask_delim(unsigned char *c, char d, char *str, int numeric);
 int lprint_key_mask();
+int print_key_mask(char *str, int numeric);
 unsigned char *get_key_mask();
 
 /* The ignored key mask */

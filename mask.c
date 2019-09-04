@@ -149,13 +149,14 @@ static int sprint_mask_delim(unsigned char *mask, char d, char *str, int numeric
 	lprintf("Error: attempt to dereference NULL mask pointer\n");
 	return INTERR;
     }
+
     for (i = 0; i <= maxkey; ++i) {
 	if (get_bit(mask, i)) {
 	    ++c;
 	    if (c > 1)
-		strfcat(str,"%c%s", d, keycodetostr(1, i, numeric));
+		strfcat(str,"%c%i", d, i/*keycodetostr(1, i, numeric*)*/);
 	    else
-		sprintf(str,"%s", keycodetostr(1, i, numeric));
+		sprintf(str,"%i", i/*keycodetostr(1, i, numeric)*/);
             }
         }
 

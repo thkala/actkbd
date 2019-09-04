@@ -28,6 +28,9 @@ static char devnode[32];
 /* The device file pointer */
 static FILE *dev;
 
+/* The device file decriptor */
+static int devfd;
+
 
 int init_dev() {
     FILE *fp = NULL;
@@ -100,7 +103,8 @@ int init_dev() {
 
 int open_dev() {
     dev = fopen(device, "a+");
-    if (dev == NULL) {
+    devfd = open(device, O_RDONLY);
+    if (dev == NULL || devfd == -1) {
 	lprintf("Error: could not open %s: %s\n", device, strerror(errno));
 	return DEVFAIL;
     }
@@ -110,6 +114,7 @@ int open_dev() {
 
 int close_dev() {
     fclose(dev);
+    close(devfd);
     return OK;
 }
 
@@ -149,12 +154,6 @@ int ungrab_dev() {
 int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll ) {
     struct input_event ev;
     int ret, ticks = 0, keydown = 0;
-
-    int fd = open(device, O_RDONLY);
-    if (fd == -1) {
-        printf("Error in opening device, %s", device);
-	return -1;
-    }
     /* Poll for keypresses */
     if(poll) {
 	if (!ticks)
@@ -163,7 +162,7 @@ int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate,
 	    printf("%i ", ticks++);
 	    u_int8_t key_b[KEY_MAX/8 + 1];
 	    memset(key_b, 0, sizeof(key_b));
-	    ioctl(fd, EVIOCGKEY(sizeof(key_b)), key_b);
+	    ioctl(devfd, EVIOCGKEY(sizeof(key_b)), key_b);
 	    int keycount = 0;
 	    for (int yalv = 0; yalv < KEY_MAX; yalv++) {
 	        if (test_bit(yalv, key_b)) {
