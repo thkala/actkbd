@@ -23,6 +23,9 @@ int showkey = 0;
 /* Keyboard polling mode */
 int kpoll = 0;
 
+/* Numeric scancode flag. */
+int num = 0;
+
 /* Tickrate for polling mode */
 int tickrate = 60;
 
@@ -60,6 +63,8 @@ static int usage() {
 	"	 -D, --daemon		 Launch in daemon mode\n"
 	"	 -d, --device <device>	 Specify the device to use\n"
 	"	 -h, --help		 Show this help text\n"
+	"	 -N, --numeric		 Display numeric key codes, instead\n"
+	"				 of the names of key codes.\n"
 	"	 -n, --noexec		 Do not execute any commands\n"
 	"	 -P, --poll		 Enable keyboard polling mode.\n"
 	"	 -p, --pidfile <file>	 Use a file to store the PID\n"
@@ -183,6 +188,7 @@ int main(int argc, char **argv) {
 	{ "daemon", no_argument, 0, 'D' },
 	{ "device", required_argument, 0, 'd' },
 	{ "help", no_argument, 0, 'h' },
+	{ "numeric", no_argument, 0, 'N' },
 	{ "noexec", no_argument, 0, 'n' },
 	{ "poll", no_argument, 0, 'P' },
 	{ "pidfile", required_argument, 0, 'p' },
@@ -199,7 +205,7 @@ int main(int argc, char **argv) {
     while (1) {
 	int c, option_index = 0;
 
-	c = getopt_long (argc, argv, "c:Dd:hPp:qnt::v::Vxsl", options, &option_index);
+	c = getopt_long (argc, argv, "c:Dd:hPp:qNnt::v::Vxsl", options, &option_index);
 	if (c == -1)
 	    break;
 
@@ -226,6 +232,9 @@ int main(int argc, char **argv) {
 	    case 'h':
 		help = 1;
 		break;
+	    case 'N':
+		num = 1;
+	    	break;
 	    case 'n':
 		noexec = 1;
 		break;
@@ -347,7 +356,7 @@ int main(int argc, char **argv) {
     signal(SIGHUP, on_hup);
     signal(SIGTERM, on_term);
 
-    while (get_key(&key, &type, &value, &time, tickrate, kpoll) == OK) {
+    while (get_key(&key, &type, &value, &time, tickrate, kpoll, num) == OK) {
 	int tmp, exec_ok = 0, norel = 0;
 
 	if ((type & (KEY | REP)) != 0)

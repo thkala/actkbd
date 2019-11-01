@@ -34,10 +34,14 @@ static int devfd;
 
 int init_dev() {
     FILE *fp = NULL;
-    int ret;
-    unsigned int u0, u1;
+    int ret = -1;
+    unsigned int u0 = 0, u1 = 0;
     regex_t preg;
     regmatch_t pmatch[4];
+    /*for (int r; r<4; r++) {
+	    pmatch[r].rm_so=0;
+	    pmatch[r].rm_eo=0;
+    }*/
 
     maxkey = KEY_MAX;
 
@@ -77,9 +81,45 @@ int init_dev() {
 	if (str == NULL)
 	    break;
 	ret = regexec(&preg, l, 4, pmatch, 0);
+	/*printf("ret: %i\nu0: %u\n", ret, u0);
+	printf(
+	    "pmatch[0].rm_so: %li, pmatch[0].rm_eo: %li\n"
+	    "pmatch[1].rm_so: %li, pmatch[1].rm_eo: %li\n"
+	    "pmatch[2].rm_so: %li, pmatch[2].rm_eo: %li\n"
+	    "pmatch[3].rm_so: %li, pmatch[3].rm_eo: %li\n"
+	    "pmatch[4].rm_so: %li, pmatch[4].rm_eo: %li\n"
+	    "pmatch[5].rm_so: %li, pmatch[5].rm_eo: %li\n"
+	    "pmatch[6].rm_so: %li, pmatch[6].rm_eo: %li\n"
+	    "pmatch[7].rm_so: %li, pmatch[7].rm_eo: %li\n"
+	    , pmatch[0].rm_so, pmatch[0].rm_eo
+            , pmatch[1].rm_so, pmatch[1].rm_eo
+            , pmatch[2].rm_so, pmatch[2].rm_eo
+            , pmatch[3].rm_so, pmatch[3].rm_eo);
+	    , pmatch[4].rm_so, pmatch[4].rm_eo
+	    , pmatch[5].rm_so, pmatch[5].rm_eo
+	    , pmatch[6].rm_so, pmatch[6].rm_eo
+	    , pmatch[7].rm_so, pmatch[7].rm_eo);*/
 	if (ret == 0) {
 	    l[pmatch[3].rm_eo] = '\0';
-	    ret = sscanf(l + pmatch[3].rm_so, "%u", &u0);
+	    ret = sscanf((l+pmatch[3].rm_so), "%u", &u0);
+	    /*printf("ret: %i\nu0: %u\nl+pmatch[3].rm_so: %s\n", ret, u0, l+pmatch[3].rm_so);
+	    printf(
+	        "pmatch[0].rm_so: %li, pmatch[0].rm_eo: %li\n"
+	        "pmatch[1].rm_so: %li, pmatch[1].rm_eo: %li\n"
+	        "pmatch[2].rm_so: %li, pmatch[2].rm_eo: %li\n"
+	        "pmatch[3].rm_so: %li, pmatch[3].rm_eo: %li\n"
+	        "pmatch[4].rm_so: %li, pmatch[4].rm_eo: %li\n"
+	        "pmatch[5].rm_so: %li, pmatch[5].rm_eo: %li\n"
+	        "pmatch[6].rm_so: %li, pmatch[6].rm_eo: %li\n"
+	        "pmatch[7].rm_so: %li, pmatch[7].rm_eo: %li\n"
+		, pmatch[0].rm_so, pmatch[0].rm_eo
+                , pmatch[1].rm_so, pmatch[1].rm_eo
+                , pmatch[2].rm_so, pmatch[2].rm_eo
+                , pmatch[3].rm_so, pmatch[3].rm_eo);
+	        , pmatch[4].rm_so, pmatch[4].rm_eo
+	        , pmatch[5].rm_so, pmatch[5].rm_eo
+	        , pmatch[6].rm_so, pmatch[6].rm_eo
+	        , pmatch[7].rm_so, pmatch[7].rm_eo);*/
 	} else {
 	    ret = -1;
 	}
@@ -151,7 +191,7 @@ int ungrab_dev() {
 }
 
 
-int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll ) {
+int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll, int num) {
     struct input_event ev;
     int ret, ticks = 0, keydown = 0;
     /* Poll for keypresses */
@@ -169,15 +209,15 @@ int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate,
 	            ++keycount;
 	            /* the bit is set in the key state */
 	            if (keycount > 1)
-	        	printf("+%s", keycodetostr(EV_KEY, yalv, 0));
+	        	(!num) ? printf("+%s", keycodetostr(EV_KEY, yalv, 0)) : printf("+%i", yalv);
 	            else if (keycount == 1) {
-	        	printf("%s", keycodetostr(EV_KEY, yalv, 0));
+	        	(!num) ? printf("%s", keycodetostr(EV_KEY, yalv, 0)) : printf("%i", yalv);
 	            }
 	        }
 		keydown = keycount ? 1 : 0;
 	    }
 	    if (!keydown)
-		printf ("KEY_NONE %i", keydown);
+		printf("%s %i", (!num) ? "KEY_NONE" : "0", keydown);
 	    else
 		printf(" %i", keydown);
 	    printf("\n");

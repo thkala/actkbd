@@ -90,7 +90,7 @@ int grab_dev();
 int ungrab_dev();
 
 /* Keyboard event receiver function */
-int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll);
+int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll, int num);
 
 /* Send an event to the input layer */
 int snd_key(int key, int type);
