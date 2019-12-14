@@ -23,11 +23,16 @@
 #include <getopt.h>
 #include <syslog.h>
 #include <signal.h>
+#include <poll.h>
+#include <fcntl.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 
 #define UNUSED 0
 
+/* Convert macro name into string */
+#define MACSTR(tok)	#tok
 
 /* Event types */
 #define INVALID		0
@@ -47,6 +52,9 @@ extern int verbose;
 /* Maximum number of keys */
 extern int maxkey;
 
+/* Unix util mode */
+extern int showkey;
+
 /* Device grab state */
 extern int grabbed;
 
@@ -59,6 +67,12 @@ extern char *config;
 
 /* Logging function */
 int lprintf(const char *fmt, ...);
+
+/* Key printing function */
+void printkeys(struct timeval time, int key, int value);
+
+/* Formatted string concatenation function */
+void strfcat(char *src, char *fmt, ...);
 
 /* Device initialisation */
 int init_dev();
@@ -76,7 +90,7 @@ int grab_dev();
 int ungrab_dev();
 
 /* Keyboard event receiver function */
-int get_key(int *key, int *type);
+int get_key(int *key, int *type, int *value, struct timeval *time, int tickrate, int poll, int num);
 
 /* Send an event to the input layer */
 int snd_key(int key, int type);
@@ -84,6 +98,8 @@ int snd_key(int key, int type);
 /* Set a keyboard LED */
 int set_led(int led, int on);
 
+/* Convert keycode value, to a string with the keycodes name. */
+extern const char *keycodetostr(int type, int code, int numeric);
 
 /* Key mask handling */
 int get_masksize();
@@ -99,8 +115,10 @@ void clear_key_mask();
 int set_key_bit(int bit, int val);
 int get_key_bit(int bit);
 int cmp_key_mask(unsigned char *mask0, unsigned int attr);
-int lprint_key_mask_delim(char c);
+int lprint_key_mask_delim();
+int sprint_key_mask_delim(unsigned char *c, char d, char *str, int numeric);
 int lprint_key_mask();
+int print_key_mask(char *str, int numeric);
 unsigned char *get_key_mask();
 
 /* The ignored key mask */

@@ -141,9 +141,35 @@ static int lprint_mask_delim(unsigned char *mask, char d) {
     }
     return OK;
 }
+/* Print a key mask to a string */
+static int sprint_mask_delim(unsigned char *mask, char d, char *str, int numeric) {
+    int i = 0, c = 0;
+
+    if (mask == NULL) {
+	lprintf("Error: attempt to dereference NULL mask pointer\n");
+	return INTERR;
+    }
+
+    for (i = 0; i <= maxkey; ++i) {
+	if (get_bit(mask, i)) {
+	    ++c;
+	    if (c > 1)
+		strfcat(str,"%c%i", d, i/*keycodetostr(1, i, numeric*)*/);
+	    else
+		sprintf(str,"%i", i/*keycodetostr(1, i, numeric)*/);
+            }
+        }
+
+    return OK;
+}
+
 
 int lprint_mask(unsigned char *mask) {
     return lprint_mask_delim(mask, '+');
+}
+
+int sprint_mask(unsigned char *mask, char *str, int numeric) {
+    return sprint_mask_delim(mask, '+', str, numeric);
 }
 
 
@@ -221,8 +247,8 @@ int lprint_key_mask_delim(char d) {
 }
 #endif
 
-int lprint_key_mask() {
-    return lprint_mask(mask);
+int print_key_mask(char *str, int numeric) {
+    return sprint_mask(mask, str, numeric);
 }
 
 

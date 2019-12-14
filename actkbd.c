@@ -17,6 +17,18 @@ int verbose = 0;
 /* Daemon mode */
 int detach = 0;
 
+/* Unix util mode */
+int showkey = 0;
+
+/* Keyboard polling mode */
+int kpoll = 0;
+
+/* Numeric scancode flag. */
+int num = 0;
+
+/* Tickrate for polling mode */
+int tickrate = 60;
+
 /* Console message suppression */
 int quiet = 0;
 
@@ -47,19 +59,32 @@ static int usage() {
 	"actkbd Version %s\n"
 	"Usage: actkbd [options]\n"
 	"    Options are as follows:\n"
-	"        -c, --config <file>     Specify the configuration file to use\n"
-	"        -D, --daemon            Launch in daemon mode\n"
-	"        -d, --device <device>   Specify the device to use\n"
-	"        -h, --help              Show this help text\n"
-	"        -n, --noexec            Do not execute any commands\n"
-	"        -p, --pidfile <file>    Use a file to store the PID\n"
-	"        -q, --quiet             Suppress all console messages\n"
-	"        -v[level]\n"
-	"        --verbose=[level]       Specify the verbosity level (0-9)\n"
-	"        -V, --version           Show version information\n"
-	"        -x, --showexec          Report executed commands\n"
-	"        -s, --showkey           Report key presses\n"
-	"        -l, --syslog            Use the syslog facilities for logging\n"
+	"	 -c, --config <file>	 Specify the configuration file to use\n"
+	"	 -D, --daemon		 Launch in daemon mode\n"
+	"	 -d, --device <device>	 Specify the device to use\n"
+	"	 -h, --help		 Show this help text\n"
+	"	 -N, --numeric		 Display numeric key codes, instead\n"
+	"				 of the names of key codes.\n"
+	"	 -n, --noexec		 Do not execute any commands\n"
+	"	 -P, --poll		 Enable keyboard polling mode.\n"
+	"	 -p, --pidfile <file>	 Use a file to store the PID\n"
+	"	 -q, --quiet		 Suppress all console messages\n"
+	"	 -v[level]\n"
+	"	 --verbose=[level]	 Specify the verbosity level (0-9)\n"
+	"	 -V, --version		 Show version information\n"
+	"	 -x, --showexec		 Report executed commands\n"
+	"	 -t[delay]\n"
+	"	 --tickrate=[delay]	 Set tickrate\n"
+	"				 (in ticks per second) for polling mode.\n"
+	"	 -s, --showkey		 Output key presses to stdout\n"
+	"				 (Output is designed to\n"
+	"				  be easily parsable.\n"
+	"				  Useful for shell\n"
+	"				  scripts, and other\n"
+	"				  general purpose use cases).\n"
+	"\n"
+	"\n"
+	"	 -l, --syslog		 Use the syslog facilities for logging\n"
     , VERSION);
 
     return OK;
@@ -151,23 +176,27 @@ static int ext_exec(char *cmd, int noexec, int showexec) {
 
 
 int main(int argc, char **argv) {
-    int ret, key, type;
+    int ret, key, type, value;
+    struct timeval time;
     key_cmd *cmd;
 
     /* Options */
-    int help = 0, noexec = 0, version = 0, showexec = 0, showkey = 0;
+    int help = 0, noexec = 0, version = 0, showexec = 0;
 
     struct option options[] = {
 	{ "config", required_argument, 0, 'c' },
 	{ "daemon", no_argument, 0, 'D' },
 	{ "device", required_argument, 0, 'd' },
 	{ "help", no_argument, 0, 'h' },
+	{ "numeric", no_argument, 0, 'N' },
 	{ "noexec", no_argument, 0, 'n' },
+	{ "poll", no_argument, 0, 'P' },
 	{ "pidfile", required_argument, 0, 'p' },
 	{ "quiet", no_argument, 0, 'q' },
 	{ "verbose", optional_argument, 0, 'v' },
 	{ "version", no_argument, 0, 'V' },
 	{ "showexec", no_argument, 0, 'x' },
+	{ "tickrate", optional_argument, 0, 't' },
 	{ "showkey", no_argument, 0, 's' },
 	{ "syslog", no_argument, 0, 'l' },
 	{ 0, 0, 0, 0 }
@@ -176,7 +205,7 @@ int main(int argc, char **argv) {
     while (1) {
 	int c, option_index = 0;
 
-	c = getopt_long (argc, argv, "c:Dd:hp:qnv::Vxsl", options, &option_index);
+	c = getopt_long (argc, argv, "c:Dd:hPp:qNnt::v::Vxsl", options, &option_index);
 	if (c == -1)
 	    break;
 
@@ -203,8 +232,14 @@ int main(int argc, char **argv) {
 	    case 'h':
 		help = 1;
 		break;
+	    case 'N':
+		num = 1;
+	    	break;
 	    case 'n':
 		noexec = 1;
+		break;
+	    case 'P':
+		kpoll = 1;
 		break;
 	    case 'p':
 		if (optarg) {
@@ -234,7 +269,18 @@ int main(int argc, char **argv) {
 	    case 'x':
 		showexec = 1;
 		break;
+	    case 't':
+		if (optarg) {
+		    tickrate = atoi(optarg);
+		    if (tickrate <= -1)
+			tickrate = 0;
+		} else {
+		    tickrate = 60;
+		}
+
 	    case 's':
+		detach = 0;
+		noexec = 1;
 		showkey = 1;
 		break;
 	    case 'l':
@@ -290,10 +336,6 @@ int main(int argc, char **argv) {
     if ((ret = open_dev()) != OK)
 	return ret;
 
-    /* Verbosity levels over 2 make showkey redundant */
-    if (verbose > 2)
-	showkey = 0;
-
     if (detach) {
 	switch (daemon(0, 0))
 	{
@@ -314,21 +356,14 @@ int main(int argc, char **argv) {
     signal(SIGHUP, on_hup);
     signal(SIGTERM, on_term);
 
-    while (get_key(&key, &type) == OK) {
+    while (get_key(&key, &type, &value, &time, tickrate, kpoll, num) == OK) {
 	int tmp, exec_ok = 0, norel = 0;
 
 	if ((type & (KEY | REP)) != 0)
 	    set_key_bit(key, 1);
 
-	if (verbose > 2) {
-	    lprintf("Event: ");
-	    lprint_key_mask();
-	    lprintf(":%s\n", (type == KEY)?"key":((type == REP)?"rep":"rel"));
-	}
-	if ((type == KEY) && showkey) {
-	    lprintf("Keys: ");
-	    lprint_key_mask();
-	    lprintf("\n");
+	if (showkey) {
+	    printkeys(time, key, value);
 	}
 
 	ret = match_key(type, &cmd);
@@ -450,4 +485,37 @@ int lprintf(const char *fmt, ...) {
     va_end(args);
 
     return ret;
+}
+
+/* Key printing function */
+void printkeys(struct timeval time, int key, int value) {
+    int printable = 0, plus = 0, gbg = 0, nums = 0;
+    char *keys = malloc(sizeof(char)*2048 + 1);
+    print_key_mask(keys, 1);
+    for (int i = 0; i < strlen(keys); ++i) {
+	if (isdigit(keys[i]))
+	    ++nums;
+	else if (keys[i] == '+')
+	    plus = 1;
+	else
+	    gbg = 1;
+
+    }
+    printable = ((nums || plus) && !gbg) ? 1 : 0;
+    if(printable) {
+	printf("%lu.%06lu %s %i\n", time.tv_sec, time.tv_usec, keys, value);
+	fflush(stdout);
+    }
+    free(keys);
+}
+
+/* Formatted string concatenation function */
+void strfcat(char *src, char *fmt, ...) {
+    char buf[2048];
+    va_list args;
+    va_start(args,fmt);
+    vsprintf(buf, fmt, args);
+    va_end(args);
+
+    strcat(src, buf);
 }

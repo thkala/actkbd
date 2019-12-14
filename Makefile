@@ -18,14 +18,14 @@ VER := $(shell head -n 1 NEWS | cut -d : -f 1)
 
 
 DEBUG :=
-CFLAGS := -O2 -Wall $(DEBUG)
+CFLAGS := -O3 -Wall $(DEBUG)
 CPPFLAGS := -DVERSION=\"$(VER)\" -DCONFIG=\"$(sysconfdir)/actkbd.conf\"
-
+#-D__float128="long double"
 
 
 all: actkbd
 
-actkbd: actkbd.o mask.o config.o linux.o
+actkbd: actkbd.o mask.o config.o linux.o inputtables.o
 
 actkbd.o : actkbd.h
 mask.o : actkbd.h
